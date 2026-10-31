@@ -249,6 +249,37 @@ does not. In `wrangler dev`, the near level of a person (3 MB) took
 sufficient, a builder with more memory (a Cloudflare Container with
 the native beam.com) builds the large orders.
 
+F4, part 1 (2026-10-31). The peak of `:erlang.memory(:total)` over the
+VM at rest, natively, in one process that builds the GLB of a person
+(the data of MakeHuman already loaded; with it not loaded, add about
+60 MB):
+
+| Person | Before | After |
+|---|---|---|
+| The defaults, near | 132 MB | 90 MB |
+| With `speech` and `expressions`, near | 431 MB (not loaded) | 131 MB |
+| The defaults, mid | 64 MB | 35 MB |
+
+- After a garbage collection only 5 to 17 MB of a build is live. The
+  collector keeps the garbage in the old heap until a full sweep, and a
+  full sweep copies the live data to a new heap: the peak was some
+  times the live data. A full collection after each big step
+  (`World.Detail.collect/1`: after each mesh of a person and each
+  primitive of the GLB) keeps it low. A full sweep at each collection
+  (`fullsweep_after: 0`) is worse: each one copies the whole heap.
+- A morph target can be a map of the points that move
+  (`World.Scene.Primitive`): a shape of the face moves few of the
+  points of the body, and 45 dense targets were 75 MB of tuples.
+- The GLB writer puts the points into the binary with no list of them
+  in the axes of glTF, and takes their bounds from the binary.
+
+Still to do: measure at the edge (Node.js 25; this computer has 22);
+the data of MakeHuman in the memory of the VM (the targets are a
+binary of 14.6 MB, the base mesh 6 MB of terms, the assets 8 MB: a
+format that reads only the targets of a person); and the peak at the
+end of a build, where the person, the scene and the buffer of the GLB
+are all live.
+
 ## Realism
 
 Phượt and Vũng Tàu need models that look like the real things. So each

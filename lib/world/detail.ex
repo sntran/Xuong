@@ -19,6 +19,20 @@ defmodule World.Detail do
     end
   end
 
+  @doc """
+  `value`, after a full garbage collection of the process. The VM at the
+  edge has 128 MB, and a build makes much garbage: the collector keeps
+  it in the old heap until a full sweep, and a full sweep copies the
+  live data to a new heap, so the peak is some times the live data. A
+  big step of a build (a mesh of a person, a primitive of a GLB) calls
+  this at its end, when little is live: the peak of the near level of a
+  person goes from 132 MB to less (`docs/factory.md`).
+  """
+  def collect(value) do
+    :erlang.garbage_collect()
+    value
+  end
+
   @doc "The level now (`:near` by default)."
   def level, do: Process.get(:world_detail, :near)
 

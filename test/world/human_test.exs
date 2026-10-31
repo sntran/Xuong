@@ -21,6 +21,13 @@ defmodule World.HumanTest do
     "woman" => {{0.44, 0.40, 1.58}, 0.05}
   }
 
+  # The moves of a target of a primitive, one for each point (a target of
+  # a person is a map of the points that move).
+  defp moves(pr, name) do
+    {_, m} = Enum.find(pr.targets, &(elem(&1, 0) == name))
+    for i <- 0..(length(pr.positions) - 1), do: Map.get(m, i, {0.0, 0.0, 0.0})
+  end
+
   for {name, fun} <- World.Catalog.models(), Map.has_key?(@sizes, name) do
     @name name
     @fun fun
@@ -269,7 +276,7 @@ defmodule World.HumanTest do
     # The silence moves nothing; "aa" opens the mouth: the chin goes down
     # by a centimeter or more, and the lower teeth with it.
     skin = Enum.find(prims, &(&1.material == :skin))
-    move = fn pr, name -> pr.targets |> Enum.find(&(elem(&1, 0) == name)) |> elem(1) end
+    move = &moves/2
     assert Enum.all?(move.(skin, "viseme_sil"), &(&1 == {0.0, 0.0, 0.0}))
     assert move.(skin, "viseme_aa") |> Enum.map(&elem(&1, 2)) |> Enum.min() < -0.01
 
@@ -382,7 +389,7 @@ defmodule World.HumanTest do
     # the target moves 0.75 of the neutral one).
     names = Enum.map(lid.(relaxed).targets, &elem(&1, 0))
     assert names == ~w(eyeBlinkLeft eyeBlinkRight)
-    size = fn p -> lid.(p).targets |> hd() |> elem(1) |> Enum.map(&World.Vec.len/1) |> Enum.max() end
+    size = fn p -> lid.(p) |> moves("eyeBlinkLeft") |> Enum.map(&World.Vec.len/1) |> Enum.max() end
     assert_in_delta size.(relaxed), 0.75 * size.(neutral), 1.0e-6
 
     # The animation blink: the weights of the targets of the mesh, closed
@@ -436,7 +443,7 @@ defmodule World.HumanTest do
       # "aa" opens the mouth (the chin down by 5 mm or more). The colored
       # parts of the body (the shoes) have the targets too; the hair at
       # mid has none.
-      {_, aa} = Enum.find(skin.targets, &(elem(&1, 0) == "viseme_aa"))
+      aa = moves(skin, "viseme_aa")
       assert aa |> Enum.map(&elem(&1, 2)) |> Enum.min() < -0.005, "#{level}"
       assert Enum.find(prims, &(&1.material == :color_shoes01)).targets != nil
 
@@ -450,7 +457,7 @@ defmodule World.HumanTest do
       # fan, which moves with the edge of the hole.
       hole = Enum.find(prims, &(&1.material == :hole))
       assert p.materials.hole["color"] == [40, 22, 24] and Enum.map(hole.targets, &elem(&1, 0)) == names
-      {_, open} = Enum.find(hole.targets, &(elem(&1, 0) == "viseme_aa"))
+      open = moves(hole, "viseme_aa")
       assert open |> Enum.map(&elem(&1, 2)) |> Enum.min() < -0.005
       assert Enum.all?(Enum.filter(prims, &(&1.material == :hair)), &(&1.targets == nil)), "#{level}"
     end
@@ -486,14 +493,14 @@ defmodule World.HumanTest do
     # The left eye of the person is at -x in World: its blink moves its
     # eyelashes down (2 mm or more), and not the eyelashes of the right eye.
     lashes = Enum.find(prims, &(&1.material == :eyelashes))
-    {_, blink} = Enum.find(lashes.targets, &(elem(&1, 0) == "eyeBlinkLeft"))
+    blink = moves(lashes, "eyeBlinkLeft")
     moved = for {{x, _, _}, {_, _, dz}} <- Enum.zip(lashes.positions, blink), do: {x, dz}
     assert Enum.any?(moved, fn {x, dz} -> x < 0 and dz < -0.002 end)
     assert Enum.all?(moved, fn {x, dz} -> x < 0 or dz == 0.0 end)
 
     # A smile of one side moves the corner of the mouth of that side up.
     skin = Enum.find(prims, &(&1.material == :skin))
-    {_, smile} = Enum.find(skin.targets, &(elem(&1, 0) == "mouthSmileRight"))
+    smile = moves(skin, "mouthSmileRight")
     ups = for {{x, _, _}, {_, _, dz}} <- Enum.zip(skin.positions, smile), dz > 0.001, do: x
     assert ups != [] and Enum.all?(ups, &(&1 > -0.005))
   end

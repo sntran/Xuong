@@ -72,7 +72,7 @@ about it.
 |---|---|
 | `World.Vec`, `World.Frame`, `World.Mesh`, `World.Shape` | Points, frames, meshes and the shapes of parts: the matter of the world. |
 | `World.Part`, `World.Port`, `World.Assembly`, `World.Joint`, `World.Limb`, `World.Figure` | A part, its ports, an assembly of parts, a joint (hinge, slide or ball, with its limits), a limb (a chain of bones and its solver), a figure with a skeleton, its joints, its limbs and its props. |
-| `World.Detail`, `World.Build`, `World.Scene`, `World.GLB`, `World.PNG` | The levels of detail, the build of a model into a scene, the GLB writer, and the PNG writer for the textures that World makes. |
+| `World.Detail`, `World.Build`, `World.Scene`, `World.GLB`, `World.PNG` | The levels of detail (and `collect/1`: a full garbage collection after a big step of a build, for the 128 MB of the edge), the build of a model into a scene, the GLB writer, and the PNG writer for the textures that World makes. |
 | `World.Kit` | Small helpers for the shapes of items (inches, round boxes, handles, feet). |
 | `World.Materials` | `Stock` (tubes, lumber, sheets, extrusions), `Fasteners` (bolts, nuts, screws), `Construction` (bricks, blocks, lintels, tiles, panels). |
 | `World.Framing` | T-slot extrusions, strut channel, L-track, and `Builds` from them. |
@@ -193,7 +193,9 @@ trees from Blender:
   builder (4 builders, by the first digit of the hash) stopped the VM
   (128 MB). `World.Service` builds one file at a time (`:global.trans`);
   the next request waits. A near level of the car or the van, alone,
-  still stops the VM (F4).
+  still stops the VM (F4). F4 part 1 took the peak of a near person
+  from 132 to 90 MB natively (`docs/factory.md`); it is not measured
+  at the edge yet.
 
 ## The steps
 

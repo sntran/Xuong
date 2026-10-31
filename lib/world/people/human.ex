@@ -83,7 +83,7 @@ defmodule World.People.Human do
     clothes = Enum.map(o.clothes, &Data.asset("clothes", &1))
     o = Map.put(o, :ground, ground(base, points, clothes))
     bones = skeleton(points, o.ground)
-    weights = vertex_weights(Enum.map(bones, & &1.name))
+    weights = Detail.collect(vertex_weights(Enum.map(bones, & &1.name)))
     level = Detail.level()
 
     {prims, materials} =
@@ -357,13 +357,17 @@ defmodule World.People.Human do
         if(o.hair, do: [{:hair, Data.asset("hair", o.hair), nil}], else: []) ++
         for(c <- clothes, do: {String.to_atom("clothes_" <> c.name), c, nil})
 
+    # A collection after each mesh (World.Detail.collect/1).
     prims =
-      [body] ++
+      [Detail.collect(body)] ++
         for(
           {role, a} <- mouth,
-          do: shade(fitted(role, a, points, weights, o.ground, mouth_shapes(role, a, mouth, points, shapes)))
+          do:
+            Detail.collect(
+              shade(fitted(role, a, points, weights, o.ground, mouth_shapes(role, a, mouth, points, shapes)))
+            )
         ) ++
-        for({role, a, _} <- assets, do: fitted(role, a, points, weights, o.ground, face(role, shapes)))
+        for({role, a, _} <- assets, do: Detail.collect(fitted(role, a, points, weights, o.ground, face(role, shapes))))
 
     materials =
       Map.new(
@@ -860,8 +864,22 @@ defmodule World.People.Human do
       joints: for(js <- joints, do: List.to_tuple(Enum.map(js, &elem(&1, 0)))),
       weights: for(js <- joints, do: List.to_tuple(Enum.map(js, &(elem(&1, 1) / 1)))),
       indices: indices,
-      targets: if(shapes != [], do: for({n, move} <- shapes, do: {n, for({v, _} <- verts, do: to_world(move.(v)))}))
+      targets: if(shapes != [], do: for({n, move} <- shapes, do: {n, sparse(verts, move)}))
     }
+  end
+
+  # The moves of a shape for the vertices of a primitive: only the
+  # vertices that move, by their index (a shape of the face moves few of
+  # the points of the body).
+  defp sparse(verts, move) do
+    verts
+    |> Enum.with_index()
+    |> Enum.reduce(%{}, fn {{v, _}, i}, acc ->
+      case to_world(move.(v)) do
+        {x, y, z} when x * x + y * y + z * z > 1.0e-14 -> Map.put(acc, i, {x, y, z})
+        _ -> acc
+      end
+    end)
   end
 
   defp fan(a, [b, c | rest]), do: [[a, b, c] | fan(a, [c | rest])]

@@ -130,8 +130,8 @@ defmodule World.GLB do
   end
 
   defp primitive(%Scene.Primitive{} = p, buf, mat_index, {names, normals?}, bumpy) do
-    {pos, buf} = floats(buf, Enum.map(p.positions, &gl/1), "VEC3", 34962, true)
-    {nor, buf} = floats(buf, Enum.map(p.normals, &gl/1), "VEC3", 34962, false)
+    {pos, buf} = floats(buf, p.positions, "VEC3", 34962, true, &gl/1)
+    {nor, buf} = floats(buf, p.normals, "VEC3", 34962, false, &gl/1)
     attrs = %{"POSITION" => pos, "NORMAL" => nor}
 
     {attrs, buf} =
@@ -198,8 +198,11 @@ defmodule World.GLB do
         end
       end)
 
-    {%{"attributes" => attrs, "indices" => ind, "material" => Map.fetch!(mat_index, p.material)}
-     |> put_some("targets", names && targets), buf}
+    # A collection after each primitive (World.Detail.collect/1).
+    World.Detail.collect(
+      {%{"attributes" => attrs, "indices" => ind, "material" => Map.fetch!(mat_index, p.material)}
+       |> put_some("targets", names && targets), buf}
+    )
   end
 
   # The tangent of each point, in the axes of glTF, for a normal texture:
@@ -252,7 +255,8 @@ defmodule World.GLB do
   # (sparse: their indices and their moves), the others zero. A target
   # with no move has no data.
   defp target(buf, moves, count) do
-    moved = for {m, i} <- Enum.with_index(moves || []), Vec.len(m) > 1.0e-7, do: {i, gl(Vec.float(m))}
+    pairs = if is_map(moves), do: Enum.sort(moves), else: Enum.with_index(moves || [], fn m, i -> {i, m} end)
+    moved = for {i, m} <- pairs, Vec.len(m) > 1.0e-7, do: {i, gl(Vec.float(m))}
     vals = [{0.0, 0.0, 0.0} | Enum.map(moved, &elem(&1, 1))]
     bound = fn f -> for k <- 0..2, do: vals |> Enum.map(&f32(elem(&1, k))) |> f.() end
 
@@ -455,20 +459,34 @@ defmodule World.GLB do
 
   # --- Accessors ---------------------------------------------------------------
 
-  defp floats(buf, vals, type, target, bounds?) do
-    data = for v <- vals, x <- Tuple.to_list(v), into: <<>>, do: <<x::little-float-32>>
-    n = tuple_size(hd(vals))
+  # The values go straight into the binary, and the bounds come from one
+  # pass: no list of the values in the axes of glTF, no columns.
+  defp floats(buf, vals, type, target, bounds?, conv \\ & &1) do
+    data = for v <- vals, x <- Tuple.to_list(conv.(v)), into: <<>>, do: <<x::little-float-32>>
     acc = %{"componentType" => 5126, "count" => length(vals), "type" => type}
 
     acc =
       if bounds? do
-        cols = for k <- 0..(n - 1), do: Enum.map(vals, &f32(elem(&1, k)))
-        Map.merge(acc, %{"min" => Enum.map(cols, &Enum.min/1), "max" => Enum.map(cols, &Enum.max/1)})
+        {lo, hi} = bounds(data, tuple_size(hd(vals)))
+        Map.merge(acc, %{"min" => lo, "max" => hi})
       else
         acc
       end
 
     add_accessor(buf, data, target, acc)
+  end
+
+  # The least and the most of each column of a binary of floats.
+  defp bounds(data, n) do
+    size = 4 * n
+    <<first::binary-size(^size), _::binary>> = data
+    start = for <<x::little-float-32 <- first>>, do: x
+
+    for <<row::binary-size(^size) <- data>>, reduce: {start, start} do
+      {lo, hi} ->
+        xs = for <<x::little-float-32 <- row>>, do: x
+        {Enum.zip_with(lo, xs, &min/2), Enum.zip_with(hi, xs, &max/2)}
+    end
   end
 
   defp scalars(buf, times) do

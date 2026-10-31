@@ -176,6 +176,18 @@ defmodule World.GLBTest do
     [x, y, z] = Enum.at(json["accessors"], t)["max"]
     assert x == 0.0 and z == 0.0
     assert_in_delta y, 0.1, 1.0e-6
+
+    # A target as a map of the points that move gives the same file as
+    # a move for each point (with zeros).
+    [{"open", list}] = p.targets
+    sparse = Map.new(0..3, &{&1, Enum.at(list, &1)})
+    dense = for {m, i} <- Enum.with_index(list), do: if(i < 4, do: m, else: {0.0, 0.0, 0.0})
+
+    one = fn moves ->
+      GLB.encode(put_in(scene.nodes, [%Scene.Node{name: "face", primitives: [%{p | targets: [{"open", moves}]}]}]))
+    end
+
+    assert one.(sparse) == one.(dense)
   end
 
   test "a material with no role in the palette is grey, and a scene with no mesh" do

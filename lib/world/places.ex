@@ -28,12 +28,13 @@ defmodule World.Places do
   def families, do: @families
 
   # The family of an assembly by its kind: the factory that makes it.
-  @family_of_kind %{wheel: :wheels, seat: :seats}
+  @family_of_kind %{wheel: :wheels, seat: :seats, house: :houses}
 
   @doc """
   The family of an item: the factory that makes it (`:wheels` for a
-  wheel, `:seats` for a seat or a bench), or `nil` for an item that the
-  factory of its parent makes.
+  wheel, `:seats` for a seat or a bench, `:houses` for a house or a
+  building of the world), or `nil` for an item that the factory of its
+  parent makes.
   """
   def family_of(%World.Assembly{kind: kind}), do: Map.get(@family_of_kind, kind)
   def family_of(_item), do: nil

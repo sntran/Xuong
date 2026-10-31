@@ -45,8 +45,9 @@ defmodule World.People.Storekeeper do
   def handle_call({:supply, order, supplier, item, n, bytes}, _from, s) do
     case Stock.put(s.stock, item, n, bytes) do
       {:ok, stock} ->
+        s = %{s | stock: stock}
         record(s, "stored", order, %{"item" => item, "count" => n, "from" => supplier})
-        {:reply, :ok, %{s | stock: stock}}
+        {:reply, :ok, s}
 
       {:error, reason} ->
         record(s, "refused", order, %{"item" => item, "count" => n, "reason" => Atom.to_string(reason)})
@@ -57,8 +58,9 @@ defmodule World.People.Storekeeper do
   def handle_call({:pick, order, item, n}, _from, s) do
     case Stock.take(s.stock, item, n) do
       {:ok, stock} ->
+        s = %{s | stock: stock}
         record(s, "picked", order, %{"item" => item, "count" => n})
-        {:reply, :ok, %{s | stock: stock}}
+        {:reply, :ok, s}
 
       error ->
         {:reply, error, s}
@@ -68,8 +70,9 @@ defmodule World.People.Storekeeper do
   def handle_call({:model, order, name, bytes}, _from, s) do
     case Stock.put(s.stock, name, 1, bytes) do
       {:ok, stock} ->
+        s = %{s | stock: stock}
         record(s, "stored", order, %{"model" => name, "bytes" => bytes})
-        {:reply, :ok, %{s | stock: stock}}
+        {:reply, :ok, s}
 
       {:error, reason} ->
         record(s, "refused", order, %{"model" => name, "bytes" => bytes, "reason" => Atom.to_string(reason)})
@@ -79,6 +82,14 @@ defmodule World.People.Storekeeper do
 
   def handle_call(:stock, _from, s), do: {:reply, s.stock, s}
 
+  # Each event of a storekeeper tells how full the store is after it: the
+  # racks of the warehouse show it.
   defp record(s, kind, order, data),
-    do: Server.record(s.log, kind, order: order, place: s.place, who: s.name, data: data)
+    do:
+      Server.record(s.log, kind,
+        order: order,
+        place: s.place,
+        who: s.name,
+        data: Map.merge(data, %{"used" => Stock.used(s.stock), "limit" => s.stock.limit})
+      )
 end

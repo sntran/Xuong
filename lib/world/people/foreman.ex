@@ -53,10 +53,12 @@ defmodule World.People.Foreman do
   Run an order of an item (or of a function that makes it, in the
   process of the foreman), and wait for its delivery: `{:ok, result}`, with
   the plan, the bytes of each part and of the model; or `{:error, reason}`.
-  `files` makes the files of the model from the item (`files/1`).
+  `files` makes the files of the model from the item (`files/1`). The
+  model goes to `site` (the site of the customer by default; a place of
+  the world for its building).
   """
-  def order(foreman, order, item, files),
-    do: GenServer.call(foreman, {:order, order, item, files}, :infinity)
+  def order(foreman, order, item, files, site \\ nil),
+    do: GenServer.call(foreman, {:order, order, item, files, site}, :infinity)
 
   @doc """
   An order of another factory (`requester`, at the place `to`): the
@@ -76,19 +78,19 @@ defmodule World.People.Foreman do
   @impl true
   def handle_call({:factories, factories}, _from, f), do: {:reply, :ok, %{f | factories: factories}}
 
-  def handle_call({:order, order, item, files}, from, f) do
+  def handle_call({:order, order, item, files, site}, from, f) do
     item = if is_function(item, 0), do: item.(), else: item
     record(f, "order_received", order, f.place, %{"item" => item.name})
     model = model(item)
 
     case Storekeeper.check(f.storekeeper, order, %{model => 1}) do
       %{^model => 0} ->
-        record(f, "delivered", order, f.site, %{"item" => item.name, "from" => "stock"})
+        record(f, "delivered", order, site || f.site, %{"item" => item.name, "from" => "stock"})
         {:reply, {:ok, %{from: :stock}}, f}
 
       _ ->
         plan = Plan.flat(item, family: if(map_size(f.factories) > 0, do: f.family))
-        start(f, %{order: order, item: item, files: files, from: from, plan: plan})
+        start(f, %{order: order, item: item, files: files, from: from, plan: plan, site: site || f.site})
     end
   end
 
@@ -264,7 +266,7 @@ defmodule World.People.Foreman do
     result =
       case Storekeeper.store_model(f.storekeeper, r.order, model(r.item), bytes) do
         :ok ->
-          record(f, "delivered", r.order, f.site, %{"item" => r.item.name, "bytes" => bytes})
+          record(f, "delivered", r.order, r.site, %{"item" => r.item.name, "bytes" => bytes})
           {:ok, %{from: :factory, plan: r.plan, sizes: r.sizes, bytes: bytes, glb: glb}}
 
         error ->

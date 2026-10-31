@@ -99,7 +99,8 @@ The world of `docs/world.md`:
 | `World.People.Person`, `World.Vehicles.Vehicle` | A person with a job (storekeeper, driver, worker, foreman), and a vehicle with its speed and its load. |
 | `World.Plan` | The tasks of an order, from the tree of its assembly. |
 | `World.Log` | The events of the world in the order of their time, in JSON, and their checks. `World.Log.Server` keeps the log of a run. |
-| `World.Run` | A run of the world: the people of a yard as processes, a warehouse and three factories (the vehicles, the wheels, the seats), and one order at a time for each factory. |
+| `World.Run` | A run of the world: the people of a yard as processes, a warehouse and four factories (the vehicles, the wheels, the seats, the houses), and one order at a time for each factory; the build of a place (`build/3`). |
+| `World.Buildings.Plants` | The buildings of the places of the world: a warehouse with a rack for each 64 MiB of its store, a factory with room for its workers. |
 | `World.People.Storekeeper`, `Driver`, `Foreman`, `Worker` | The jobs of the people as processes: the stock, the haul on the road, the plan and the tasks (and the orders to the other factories), the work of a task. |
 
 ## The core of Wings

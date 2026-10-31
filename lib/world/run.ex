@@ -1,18 +1,22 @@
 defmodule World.Run do
   @moduledoc """
-  A run of the world (`docs/world.md`, steps W2 and W4): orders through
-  the places and the people of a yard. The yard has one warehouse with
-  its storekeeper and the driver of its truck, three factories (the
-  vehicles, the wheels and the seats), each with its foreman, its workers
-  and (the wheels and the seats) the driver of its truck, a supplier, and
-  the site of the customer. The people are processes. Each act is an
-  event of the log, at its real time.
+  A run of the world (`docs/world.md`, steps W2, W4 and W5): orders
+  through the places and the people of a yard. The yard has one warehouse
+  with its storekeeper and the driver of its truck, four factories (the
+  vehicles, the wheels, the seats and the houses), each with its foreman,
+  its workers and (the wheels and the seats) the driver of its truck, a
+  supplier, and the site of the customer. The people are processes. Each
+  act is an event of the log, at its real time.
+
+  The people build the places too (`build/3`): the houses factory makes
+  the building of a warehouse or of a factory.
 
   An order goes to the factory of the family of its item (the vehicles by
   default). A smaller assembly of another family is an order to the
   factory of that family, and its truck brings it by road.
   """
   alias World.{Clock, Places, Yard}
+  alias World.Buildings.Plants
   alias World.Log.Server
   alias World.People.{Driver, Foreman, Person, Storekeeper, Worker}
   alias World.Vehicles.Vehicle
@@ -30,7 +34,8 @@ defmodule World.Run do
       workers: ["hanh"],
       out: {"khoa", "wheel_truck"}
     },
-    %{place: "seats", family: :seats, at: {-300, 400}, foreman: "lan", workers: ["minh"], out: {"nga", "seat_truck"}}
+    %{place: "seats", family: :seats, at: {-300, 400}, foreman: "lan", workers: ["minh"], out: {"nga", "seat_truck"}},
+    %{place: "houses", family: :houses, at: {-300, -300}, foreman: "oanh", workers: ["phuc", "quang"]}
   ]
 
   @doc """
@@ -173,6 +178,30 @@ defmodule World.Run do
       item,
       Keyword.get(opts, :files, &Foreman.files/1)
     )
+  end
+
+  @doc """
+  Build a place of the yard (`World.Buildings.Plants.of/2`): its building
+  is an order to the houses factory, delivered to the place. The log has
+  `build_started` (the model and its size) and `build_done`. The result
+  is the result of the order.
+  """
+  def build(%__MODULE__{} = run, name, order \\ nil) do
+    item = Plants.of(run.yard, name)
+    order = order || "build-#{name}"
+    size = Map.take(item.extras, ~w(length depth racks limit workers))
+    Server.record(run.log, "build_started", order: order, place: name, data: Map.put(size, "model", item.name))
+    result = Foreman.order(run.foremen.houses, order, item, &Foreman.files/1, name)
+
+    with {:ok, r} <- result do
+      Server.record(run.log, "build_done",
+        order: order,
+        place: name,
+        data: %{"model" => item.name, "from" => to_string(r.from)}
+      )
+    end
+
+    result
   end
 
   @doc "The log of the run (`World.Log`)."

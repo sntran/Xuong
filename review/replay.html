@@ -21,6 +21,8 @@
   svg .road { stroke: var(--road); stroke-width: 10; stroke-linecap: round; }
   svg .place { fill: var(--paper); stroke: var(--ink); stroke-width: 4; }
   svg .truck { fill: var(--mark); }
+  svg .rack { fill: var(--paper); stroke: var(--ink); stroke-width: 3; }
+  svg .rack.full { fill: var(--ink); }
   ol { list-style: none; margin: 0; padding: 0; font-size: 12px; }
   ol li { border-top: 1px solid var(--line); padding: 3px 0; }
   ol li time { color: var(--soft); font-variant-numeric: tabular-nums; margin-right: 6px; }
@@ -119,6 +121,8 @@ function say(e) {
   const n = (k) => `${d.count ?? ''} ${d[k] ?? ''}`.trim();
   switch (e.kind) {
     case 'order_received': return d.items ? `${e.who} gets the order of the ${d.for} for ${d.items.join(', ')}.` : `${e.who} gets the order of ${d.item}.`;
+    case 'build_started': return `The building of the ${e.place} starts${d.racks ? `: ${d.racks} racks` : ''}.`;
+    case 'build_done': return `The building of the ${e.place} is done.`;
     case 'part_ordered': return `${e.who} orders ${Object.entries(d.items).map(([i, c]) => `${c} ${i}`).join(', ')} from the ${d.factory}.`;
     case 'received': return `${n('item')} arrives at the ${e.place} from the ${d.order.split('/').pop()}.`;
     case 'stock_checked': return `${e.who} checks the stock: ${Object.values(d.missing ?? {}).reduce((a, b) => a + b, 0)} missing.`;
@@ -159,6 +163,15 @@ for (const p of yard.places) {
   el('circle', { class: 'place', cx: p.at[0], cy: -p.at[1], r: 24 });
   el('text', { x: p.at[0] + 34, y: -p.at[1] + 9 }, p.family ? `${p.name} (${p.kind})` : p.name);
 }
+// The racks of a warehouse under it: one rack holds 64 MiB of files, and a
+// full rack is dark (World.Buildings.Plants).
+const RACK = 64 * 1024 * 1024;
+const racks = Object.fromEntries(yard.places.filter((p) => p.limit).map((p) => {
+  const n = Math.max(1, Math.ceil(p.limit / RACK));
+  const shown = Math.min(n, 16);
+  return [p.name, Array.from({ length: shown }, (_, i) =>
+    el('rect', { class: 'rack', width: 26, height: 40, x: p.at[0] - 16 * shown + 32 * i, y: -p.at[1] + 36 }))];
+}));
 const trucks = Object.fromEntries(yard.vehicles.map((v) => [v.name, el('rect', { class: 'truck', width: 44, height: 28, x: -22, y: -14 })]));
 
 // The trips of each vehicle: from a departure to its arrival.
@@ -268,6 +281,12 @@ function draw(t) {
   }
   for (const [who, task] of Object.entries(doing)) status[who] = `works on ${task}`;
   for (const [name, cell] of Object.entries(rows)) cell.textContent = status[name];
+  // The stock of each warehouse after its last event.
+  for (const [place, rects] of Object.entries(racks)) {
+    const last = events.slice(0, n).findLast((e) => e.place === place && e.data?.used !== undefined);
+    const full = Math.ceil((last?.data.used ?? 0) / RACK);
+    rects.forEach((r, i) => r.classList.toggle('full', i < full));
+  }
   for (const p of parts) {
     p.node.visible = started.has(p.task);
     for (const [m, own] of p.meshes) m.material = done.has(p.task) ? own : mark;

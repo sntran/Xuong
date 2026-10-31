@@ -116,7 +116,8 @@ models").
 | W2. The world: one thin slice | One order of the van through a warehouse, a truck with its driver on a road, and a factory with a foreman and two workers. The people are processes, and each act is an event of the log at its real time. The flow is a TLA+ specification (`specs/Order.tla`): the native checker of Accord checks it, and the log of a run replays as one of its behaviors. | Done |
 | W3. The world: the replay | The orders of the site go through the world: the log of each order (`/o/HASH.log.json`), the model with a node for each task (`/o/HASH.replay.glb`), and the replay page (`/replay.html?order=HASH`). `docs/specs.md` tells the specifications and their checks. | Done |
 | W4. The world: the factories | The wheel factory and the seat factory next to the vehicle factory. A smaller assembly of another family is an order to the factory of its family, and its truck brings it by road. | Done |
-| W5 to W9. The world | The buildings, the stores (one bucket for each warehouse), the measures of the site, the other vans, the engineers. | To do |
+| W5. The world: the buildings | The people build the warehouse and the factories as orders to the houses factory. A warehouse has a rack for each 64 MiB of its store, and the replay shows how full they are. | Done |
+| W6 to W9. The world | The stores (one bucket for each warehouse), the measures of the site, the other vans, the engineers. | To do |
 | 7. DIY uses World | DIY draws its SVG from the models, and keeps its pictures. | To do |
 | 8. Voxel models | The `.vox` reader and writer, the voxel maker, and the stamp of a model into the grid of Tre. | To do |
 | 9. STL for a printer | STL at a scale, for each material too, and the checks of a print. | To do |

@@ -87,19 +87,21 @@ forever for a part, a worker or a place in the warehouse.
 
 ## The model check
 
-`specs/MCOrder.tla` is a small model: a body, two doors, and a wheel of
-a rim and a tire (a smaller assembly, so the plan has a sub-order), two
-workers, a truck of two parts, and a warehouse of 6 bytes. It is small,
-but it has each shape of the real plans: a task with no wait, tasks that
-wait for one task, a sub-order that waits for its tasks, two parts of one
-name, more parts than the truck carries, and a warehouse that is almost
-full.
+`specs/MCOrder.tla` is a small model: a body, a door, a wheel of a rim
+and a tire (a smaller assembly, so the plan has a sub-order), and a seat
+from another factory, two workers, a truck of two parts, and a warehouse
+of 6 bytes. It is small, but it has each shape of the real plans: a task
+with no wait, tasks that wait for one task, a sub-order that waits for
+its tasks, an item that another factory sends (`Receive`), more parts
+than the truck carries, and a warehouse that is almost full. Two parts
+of one name are not in the model (with a second door, the check takes
+more than 40 s); the replay of the van, with its four wheels, has them.
 
 | Configuration | Result | Numbers |
 |---|---|---|
-| `MCOrder.cfg` | Each invariant holds, and `Delivers` holds. | 19,856 distinct states, depth 46 |
+| `MCOrder.cfg` | Each invariant holds, and `Delivers` holds. | 13,836 distinct states, depth 43 |
 | `MCOrderFault.cfg` (`Guard = FALSE`) | The checker finds `OneWorkerOneTask` violated. | A trace of 17 states |
-| `MCOrderSmall.cfg` (`Limit = 3`) | The checker finds the dead end: the files of the model (4 bytes) never fit. | A trace of 44 states |
+| `MCOrderSmall.cfg` (`Limit = 3`) | The checker finds the dead end: the files of the model (4 bytes) never fit. | A trace of 41 states |
 
 The checker is the native TLA+ checker of Accord
 (<https://github.com/sntran/accord>, the branch `feat/native-tla-checker`).

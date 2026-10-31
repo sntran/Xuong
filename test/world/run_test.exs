@@ -109,6 +109,34 @@ defmodule World.RunTest do
     Run.stop(run)
   end
 
+  test "the people build a warehouse: its size from the limit of its store, and the log has the build" do
+    run = Run.start(Run.yard(limit: 200 * 1024 * 1024))
+    assert {:ok, %{from: :factory} = result} = World.Detail.with(:far, fn -> Run.build(run, "warehouse") end)
+    events = Log.events(Run.log(run))
+    assert Log.check(Run.log(run)) == :ok
+
+    # 200 MiB is four racks of 64 MiB.
+    started = Enum.find(events, &(&1.kind == "build_started"))
+    assert started.place == "warehouse" and started.data["racks"] == 4 and started.data["limit"] == 200 * 1024 * 1024
+    assert started.data["model"] == "building_warehouse"
+
+    # The houses factory builds it, and the building goes to its place.
+    build = Enum.filter(events, &(&1.order == "build-warehouse"))
+    assert Enum.any?(build, &(&1.kind == "task_done" and &1.place == "houses"))
+    assert %{kind: "delivered", place: "warehouse"} = Enum.find(build, &(&1.kind == "delivered"))
+    assert %{kind: "build_done", data: %{"from" => "factory"}} = List.last(events)
+    assert length(result.plan.tasks) > 300
+
+    # Each event of the storekeeper tells how full the store is.
+    stored = Enum.find(build, &(&1.kind == "stored"))
+    assert stored.data["used"] > 0 and stored.data["limit"] == 200 * 1024 * 1024
+
+    # A second build of the same place: from the stock.
+    assert {:ok, %{from: :stock}} = World.Detail.with(:far, fn -> Run.build(run, "warehouse", "again") end)
+    assert %{kind: "build_done", data: %{"from" => "stock"}} = List.last(Log.events(Run.log(run)))
+    Run.stop(run)
+  end
+
   test "a warehouse too small for a part refuses it, and the order stops" do
     run = Run.start(Run.yard(limit: 1_000, capacity: 2, workers: ["dung"], clock: Clock.new()))
     assert Run.order(run, Seats.seat("s")) == {:error, :full}

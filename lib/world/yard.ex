@@ -63,7 +63,8 @@ defmodule World.Yard do
 
   @doc """
   The yard as data for the head of a log and for its replay: the places
-  (name, kind, family, position), the roads, the people (name, job,
+  (name, kind, family, position, and the limit of the store of a
+  warehouse), the roads, the people (name, job,
   place, station) and the vehicles (name, model, place, driver).
   """
   def describe(%__MODULE__{} = yard) do
@@ -75,7 +76,8 @@ defmodule World.Yard do
             "name" => p.name,
             "kind" => Atom.to_string(p.kind),
             "family" => p.family && Atom.to_string(p.family),
-            "at" => Tuple.to_list(p.at)
+            "at" => Tuple.to_list(p.at),
+            "limit" => p.stock && p.stock.limit
           }
         ),
       "roads" =>

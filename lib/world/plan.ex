@@ -17,10 +17,13 @@ defmodule World.Plan do
 
   The id of a task is the name of its node. A task takes one part from
   the dock (`uses`), the part with shapes of its node, and its work is to
-  make that part (`work`). `flat/1` puts the plans of the smaller
-  assemblies into one plan, for one factory.
+  make that part (`work`). `flat/2` puts the plans of the smaller
+  assemblies into one plan, for one factory: a smaller assembly of
+  another family of things (`World.Places.family_of/1`: the wheels, the
+  seats) is an order to the factory of that family, and the plan has
+  only the task that connects it when it arrives.
   """
-  alias World.{Assembly, Figure, Part}
+  alias World.{Assembly, Figure, Part, Places}
 
   defmodule Task do
     @moduledoc """
@@ -28,7 +31,9 @@ defmodule World.Plan do
     `:connect`), the name of its item, its station, the node and the port
     it connects to, its joint (the role of a joint, or `nil`), the ids
     of the tasks it waits for, the name of the part it takes from the dock
-    (`uses`, or `nil`), and the part to make (`work`, or `nil`).
+    (`uses`, or `nil`), the part to make (`work`, or `nil`), and the
+    family of the factory that makes its part (`from`, or `nil`: the
+    part comes from the warehouse).
     """
     defstruct id: nil,
               action: nil,
@@ -40,10 +45,17 @@ defmodule World.Plan do
               joint: nil,
               waits: [],
               uses: nil,
-              work: nil
+              work: nil,
+              from: nil
   end
 
-  defstruct name: nil, tasks: [], parts: %{}
+  @doc """
+  A plan: its tasks, the parts to get from the warehouse (`parts`, the
+  count of each name), the items that come from other factories
+  (`ordered`, the count of each name), and the orders to those factories
+  (`orders`: `{family, node, item}`, one for each item).
+  """
+  defstruct name: nil, tasks: [], parts: %{}, ordered: %{}, orders: []
 
   @doc "The plan of a part, a figure or an assembly."
   def of(%Part{} = p), do: %__MODULE__{name: p.name, tasks: [make(p.name, p)], parts: parts([p])}
@@ -103,34 +115,80 @@ defmodule World.Plan do
   The tasks of a smaller assembly have the name of its node before their
   ids (`"front_left_wheel/tire"`). Its task `:order` waits for each of
   its tasks: the smaller assembly is done when they are done.
-  """
-  def flat(item), do: flat(item, "")
 
-  defp flat(%Assembly{name: name, nodes: [{root, root_item, nil} | rest]} = a, prefix) do
+  With the option `family` (the family of the factory), a smaller
+  assembly of another family has no tasks here: it is an order to the
+  factory of its family (`orders`), and its task `:connect` takes it
+  from the dock when it arrives (`from`: its family).
+  """
+  def flat(item, opts \\ []), do: flat(item, "", Keyword.get(opts, :family))
+
+  defp flat(%Assembly{name: name, nodes: [{root, root_item, nil} | rest]} = a, prefix, family) do
+    items = Map.new(rest, fn {n, i, _} -> {n, i} end)
+    foreign = for {n, i, _} <- rest, foreign?(i, family), into: MapSet.new(), do: n
+
     subs =
       Map.new(
-        [{root, root_item} | for({n, i, _} <- rest, do: {n <> "/order", i})],
+        [{root, root_item} | for({n, i, _} <- rest, not MapSet.member?(foreign, n), do: {n <> "/order", i})],
         fn {id, i} -> {id, {id, i}} end
       )
 
-    tasks =
-      Enum.flat_map(of(a).tasks, fn t ->
-        case {t.action, subs[t.id]} do
-          {:order, {id, sub}} ->
-            inner = flat(sub, prefix <> String.replace_suffix(id, "/order", "") <> "/").tasks
-            inner ++ [%{t | id: prefix <> t.id, waits: Enum.map(inner, & &1.id)}]
+    {tasks, orders} =
+      Enum.flat_map_reduce(of(a).tasks, [], fn t, orders ->
+        node = String.replace_suffix(t.id, "/order", "")
 
-          _ ->
-            [%{t | id: prefix <> t.id, waits: Enum.map(t.waits, &(prefix <> &1))}]
+        cond do
+          MapSet.member?(foreign, node) and t.action == :order ->
+            {[], orders}
+
+          MapSet.member?(foreign, t.id) ->
+            i = items[t.id]
+            waits = for w <- t.waits, w != t.id <> "/order", do: prefix <> w
+
+            {[%{t | id: prefix <> t.id, waits: waits, uses: i.name, from: Places.family_of(i)}],
+             orders ++ [{Places.family_of(i), prefix <> t.id, i}]}
+
+          true ->
+            case {t.action, subs[t.id]} do
+              {:order, {id, sub}} ->
+                inner = flat(sub, prefix <> String.replace_suffix(id, "/order", "") <> "/", family)
+
+                {inner.tasks ++ [%{t | id: prefix <> t.id, waits: Enum.map(inner.tasks, & &1.id)}],
+                 orders ++ inner.orders}
+
+              _ ->
+                {[%{t | id: prefix <> t.id, waits: Enum.map(t.waits, &(prefix <> &1))}], orders}
+            end
         end
       end)
 
-    %__MODULE__{name: name, tasks: tasks, parts: needs(tasks)}
+    plan(name, tasks, orders)
   end
 
-  defp flat(item, prefix) do
+  defp flat(item, prefix, _family) do
     plan = of(item)
     %{plan | tasks: for(t <- plan.tasks, do: %{t | id: prefix <> t.id})}
+  end
+
+  defp foreign?(item, family) do
+    other = Places.family_of(item)
+    family != nil and other != nil and other != family
+  end
+
+  defp plan(name, tasks, orders) do
+    {ordered, own} = Enum.split_with(tasks, & &1.from)
+    %__MODULE__{name: name, tasks: tasks, parts: needs(own), ordered: needs(ordered), orders: orders}
+  end
+
+  @doc """
+  The plan of a factory for an order of other factory: the items
+  (`{node, item}`, each a smaller assembly of the family of this
+  factory), each with its tasks under the name of its node
+  (`"front_left_wheel/rim"`).
+  """
+  def batch(items, family) do
+    plans = for {node, item} <- items, do: flat(item, node <> "/", family)
+    plan(Enum.map_join(items, ", ", &elem(&1, 0)), Enum.flat_map(plans, & &1.tasks), Enum.flat_map(plans, & &1.orders))
   end
 
   @doc "The count of each part that the tasks of a plan take from the dock."
@@ -146,10 +204,11 @@ defmodule World.Plan do
   def stations(%__MODULE__{tasks: tasks}), do: Enum.group_by(tasks, & &1.station)
 
   @doc "The plan as data for the log: the id, the action, the station and the waits of each task."
-  def to_data(%__MODULE__{name: name, tasks: tasks, parts: parts}) do
+  def to_data(%__MODULE__{name: name, tasks: tasks, parts: parts, ordered: ordered}) do
     %{
       "name" => name,
       "parts" => parts,
+      "ordered" => ordered,
       "tasks" =>
         for(
           t <- tasks,
@@ -158,7 +217,8 @@ defmodule World.Plan do
             "action" => Atom.to_string(t.action),
             "station" => t.station,
             "waits" => t.waits,
-            "uses" => t.uses
+            "uses" => t.uses,
+            "from" => t.from && Atom.to_string(t.from)
           }
         )
     }

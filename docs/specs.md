@@ -37,7 +37,8 @@ tasks of the plan, the files of the model, and the delivery.
 |---|---|---|
 | `Items` | The names of the parts of the order. | `World.Plan.flat/1`, the parts |
 | `Size[i]` | The bytes of one part `i`. | The size of the part in the external format of the BEAM |
-| `Need[i]` | The count of the part `i` that the order needs. | The plan |
+| `Need[i]` | The count of the part `i` that the order needs from the warehouse. | The plan |
+| `Ordered[i]` | The count of the item `i` that comes from other factories (a wheel, a seat). | The plan (`ordered`) |
 | `Limit` | The size of the warehouse, in bytes. | `World.Stock`, the limit |
 | `Capacity` | The count of parts on the truck. | `World.Vehicles.Vehicle`, the capacity |
 | `Tasks`, `Waits[t]`, `Uses[t]` | The tasks of the plan, the tasks that each one waits for, and the part that each one takes from the dock. | The plan: the tree of the assembly |
@@ -58,6 +59,7 @@ for each act, with the same name.
 | `Depart(p)` | The driver | The truck leaves the warehouse with a load, or the factory empty. | `departed` |
 | `Arrive(p)` | The driver | The truck is on the road to `p`. | `arrived` |
 | `Unload(i, n)` | The driver | The truck is at the factory with the parts. | `unloaded` |
+| `Receive(i, n)` | The driver of another factory | The order asked that factory for `n` more of the item `i`. | `received` |
 | `Start(w, t)` | A worker | The worker is free, each task that `t` waits for is done, and the part of `t` is at the dock. | `task_started` |
 | `Finish(w, t)` | A worker | The worker does `t`. | `task_done` |
 | `ModelDone` | The foreman | Each task is done and each worker is free. | `model_done` |
@@ -71,7 +73,7 @@ An invariant is true in each state that the system can reach.
 | Invariant | What it says | The fault that it stops |
 |---|---|---|
 | `InLimit` | The warehouse never holds more than its size. | A full warehouse that takes one more part, or the files of a model. |
-| `Conservation` | Each part is at one place only: in the store, at a dock, on the truck, or in the model. The count from the supplier is the sum. | A part that is lost, or a part that comes from nowhere. |
+| `Conservation` | Each part is at one place only: in the store, at a dock, on the truck, or in the model. The count from the supplier and from the other factories is the sum. | A part that is lost, or a part that comes from nowhere. |
 | `InCapacity` | The truck never carries more than its capacity. | A truck with too much load. |
 | `OneWorkerOneTask` | Two workers never do one task. | Two workers that build the same part, so the model has it two times. |
 | `WaitsFirst` | A task starts only after each task that it waits for is done. | A door on a body that is not there. |

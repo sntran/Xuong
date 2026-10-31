@@ -14,7 +14,7 @@ defmodule World.Log do
   alias World.Clock
 
   @kinds ~w(order_received plan_made stock_checked part_ordered picked stored refused
-            loaded departed arrived unloaded task_started task_done model_done delivered
+            loaded departed arrived unloaded received task_started task_done model_done delivered
             build_started build_done)
 
   defmodule Event do

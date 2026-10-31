@@ -206,6 +206,51 @@ defmodule World.WorldTest do
       assert flat.parts == %{"body" => 1, "door" => 1, "rim" => 1}
       assert [%Plan.Task{id: "seat", uses: "seat"}] = Plan.flat(box.("seat", nil)).tasks
     end
+
+    test "for a factory, a smaller assembly of another family is an order to the factory of that family" do
+      part = fn name ->
+        Part.new(name, :part, [Shape.box({0, 0, 0}, {1, 1, 1}, :steel)], [Part.port("p", {0, 0, 0}, {0, 0, 1})])
+      end
+
+      wheel = %{Assembly.new("wheel_x", part.("rim"), root: "rim") | kind: :wheel}
+      seat = %{Assembly.new("seat_x", part.("cushion"), root: "cushion") | kind: :seat}
+
+      corner =
+        Assembly.new("corner", part.("knuckle"), root: "knuckle") |> Assembly.add("wheel", wheel, at: "p", port: "p")
+
+      van =
+        Assembly.new("van", part.("body"), root: "body")
+        |> Assembly.add("corner", corner, at: "p", port: "p")
+        |> Assembly.add("seat", seat, at: "p", port: "p")
+
+      assert Places.family_of(wheel) == :wheels and Places.family_of(seat) == :seats and
+               Places.family_of(part.("x")) == nil
+
+      plan = Plan.flat(van, family: :vehicles)
+
+      assert Enum.map(plan.tasks, &{&1.id, &1.uses, &1.from}) == [
+               {"body", "body", nil},
+               {"corner/knuckle", "knuckle", nil},
+               {"corner/wheel", "wheel_x", :wheels},
+               {"corner/order", nil, nil},
+               {"corner", nil, nil},
+               {"seat", "seat_x", :seats}
+             ]
+
+      assert Enum.find(plan.tasks, &(&1.id == "corner/wheel")).waits == ["corner/knuckle"]
+      assert plan.parts == %{"body" => 1, "knuckle" => 1}
+      assert plan.ordered == %{"wheel_x" => 1, "seat_x" => 1}
+      assert [{:wheels, "corner/wheel", ^wheel}, {:seats, "seat", ^seat}] = plan.orders
+      assert %{"from" => "wheels"} = Enum.find(Plan.to_data(plan)["tasks"], &(&1["id"] == "corner/wheel"))
+
+      # With no family, the plan has all the tasks, as before.
+      assert Plan.flat(van).ordered == %{} and
+               Plan.flat(van).parts == %{"body" => 1, "knuckle" => 1, "rim" => 1, "cushion" => 1}
+
+      # The plan of the wheel factory for two wheels.
+      batch = Plan.batch([{"a", wheel}, {"b", wheel}], :wheels)
+      assert Enum.map(batch.tasks, & &1.id) == ["a/rim", "b/rim"] and batch.parts == %{"rim" => 2}
+    end
   end
 
   describe "the log" do

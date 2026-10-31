@@ -118,7 +118,9 @@ function say(e) {
   const d = e.data ?? {};
   const n = (k) => `${d.count ?? ''} ${d[k] ?? ''}`.trim();
   switch (e.kind) {
-    case 'order_received': return `${e.who} gets the order of ${d.item}.`;
+    case 'order_received': return d.items ? `${e.who} gets the order of the ${d.for} for ${d.items.join(', ')}.` : `${e.who} gets the order of ${d.item}.`;
+    case 'part_ordered': return `${e.who} orders ${Object.entries(d.items).map(([i, c]) => `${c} ${i}`).join(', ')} from the ${d.factory}.`;
+    case 'received': return `${n('item')} arrives at the ${e.place} from the ${d.order.split('/').pop()}.`;
     case 'stock_checked': return `${e.who} checks the stock: ${Object.values(d.missing ?? {}).reduce((a, b) => a + b, 0)} missing.`;
     case 'plan_made': return `${e.who} makes the plan: ${d.tasks.length} tasks.`;
     case 'stored': return d.model ? `${e.who} puts the files of the model in the warehouse.` : `${e.who} puts ${n('item')} from the ${d.from} in the warehouse.`;
@@ -130,7 +132,7 @@ function say(e) {
     case 'arrived': return `${e.who} arrives at the ${d.to}.`;
     case 'task_started': return `${e.who} starts ${d.task}.`;
     case 'task_done': return `${e.who} ends ${d.task}.`;
-    case 'model_done': return `${e.who} makes the files of the model (${Math.round(d.bytes / 1024)} KB).`;
+    case 'model_done': return d.items ? `${e.who} ends ${Object.entries(d.items).map(([i, c]) => `${c} ${i}`).join(', ')}.` : `${e.who} makes the files of the model (${Math.round(d.bytes / 1024)} KB).`;
     case 'delivered': return d.from === 'stock' ? `The ${e.place} gets ${d.item} from the stock.` : `The ${e.place} gets ${d.item}.`;
     default: return `${e.who ?? ''} ${e.kind}`.trim();
   }
@@ -235,8 +237,8 @@ function upTo(t) {
   return lo;
 }
 
-const plan = events.find((e) => e.kind === 'plan_made');
-const total = plan ? plan.data.tasks.length : 0;
+// The tasks of the order and of its orders to other factories.
+const total = events.filter((e) => e.kind === 'plan_made').reduce((sum, e) => sum + e.data.tasks.length, 0);
 const peopleTable = $('people');
 const rows = Object.fromEntries(yard.people.map((p) => {
   const row = peopleTable.insertRow();

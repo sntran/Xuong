@@ -27,6 +27,17 @@ defmodule World.Places do
   @doc "The families of things, one for each factory."
   def families, do: @families
 
+  # The family of an assembly by its kind: the factory that makes it.
+  @family_of_kind %{wheel: :wheels, seat: :seats}
+
+  @doc """
+  The family of an item: the factory that makes it (`:wheels` for a
+  wheel, `:seats` for a seat or a bench), or `nil` for an item that the
+  factory of its parent makes.
+  """
+  def family_of(%World.Assembly{kind: kind}), do: Map.get(@family_of_kind, kind)
+  def family_of(_item), do: nil
+
   @doc "A warehouse with the limit of its store, in bytes."
   def warehouse(name, at, limit), do: place(name, :warehouse, at, stock: Stock.new(limit))
 

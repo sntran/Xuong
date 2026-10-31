@@ -84,7 +84,7 @@ defmodule World.Furniture.Seats do
     asm =
       Assembly.new(name, base,
         root: name <> "_base",
-        kind: :furniture,
+        kind: :seat,
         sources: o.sources,
         extras: %{"params" => params}
       )

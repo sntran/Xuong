@@ -1,8 +1,8 @@
 defmodule World.People.Driver do
   @moduledoc """
   A driver (`World.People.Person`, job `:driver`) as a process, with its
-  vehicle. A haul takes the parts from the dock of the warehouse to the
-  dock of the factory: the driver loads the truck up to its capacity,
+  vehicle. A haul takes the parts from the dock of a place to the dock of
+  another: the driver loads the truck up to its capacity,
   drives on the road, unloads, and drives back for the next load. The
   drive is real time: the driver waits the time of the drive in the world
   over the scale of the clock. After each unload, the driver tells the
@@ -20,9 +20,10 @@ defmodule World.People.Driver do
   def start_link(opts), do: GenServer.start_link(__MODULE__, Map.new(opts))
 
   @doc """
-  Haul the items (`[{item, count}]`) of an order from the warehouse to the
-  factory, and tell `foreman` each unload (`{:unloaded, item, count}`),
-  then `{:hauled, driver}`.
+  Haul the items (`[{item, count}]`) of an order from a place to another
+  (the warehouse to a factory, or a factory to another), and tell
+  `foreman` each unload (`{:unloaded, order, item, count}`), then
+  `{:hauled, driver}`.
   """
   def haul(driver, order, items, from, to, foreman),
     do: GenServer.cast(driver, {:haul, order, items, from, to, foreman})
@@ -44,7 +45,7 @@ defmodule World.People.Driver do
 
       for {item, n} <- load do
         record(d, "unloaded", order, to, %{"item" => item, "count" => n})
-        send(foreman, {:unloaded, item, n})
+        send(foreman, {:unloaded, order, item, n})
       end
 
       drive(d, order, to, from)

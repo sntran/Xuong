@@ -64,6 +64,7 @@ defmodule World.OrderSpec do
   defp action(%{kind: "picked", data: d}, _), do: {"Pick", [d["item"], d["count"]]}
   defp action(%{kind: "loaded", data: d}, _), do: {"Load", [d["item"], d["count"]]}
   defp action(%{kind: "unloaded", data: d}, _), do: {"Unload", [d["item"], d["count"]]}
+  defp action(%{kind: "received", data: d}, _), do: {"Receive", [d["item"], d["count"]]}
   defp action(%{kind: "departed", data: d}, run), do: {"Depart", [place(d["from"], run)]}
   defp action(%{kind: "arrived", data: d}, run), do: {"Arrive", [place(d["to"], run)]}
   defp action(%{kind: "task_started", who: w, data: d}, _), do: {"Start", [w, d["task"]]}
@@ -77,13 +78,17 @@ defmodule World.OrderSpec do
 
   defp module(result, run) do
     tasks = result.plan.tasks
+    # The items from other factories never go into the warehouse.
+    zero = Map.new(result.plan.ordered, fn {i, _} -> {i, 0} end)
+    own = Map.new(result.plan.parts, fn {i, _} -> {i, 0} end)
 
     """
     ---- MODULE Run ----
     EXTENDS Order, TLC
-    RunItems == #{set(Map.keys(result.plan.parts))}
-    RunSize == #{fun(result.sizes, &Integer.to_string/1)}
-    RunNeed == #{fun(result.plan.parts, &Integer.to_string/1)}
+    RunItems == #{set(Map.keys(result.plan.parts) ++ Map.keys(result.plan.ordered))}
+    RunSize == #{fun(Map.merge(zero, result.sizes), &Integer.to_string/1)}
+    RunNeed == #{fun(Map.merge(zero, result.plan.parts), &Integer.to_string/1)}
+    RunOrdered == #{fun(Map.merge(own, result.plan.ordered), &Integer.to_string/1)}
     RunTasks == #{set(Enum.map(tasks, & &1.id))}
     RunWaits == #{fun(Map.new(tasks, &{&1.id, &1.waits}), &set/1)}
     RunUses == #{fun(Map.new(tasks, &{&1.id, &1.uses || ""}), &str/1)}
@@ -100,6 +105,7 @@ defmodule World.OrderSpec do
         Items <- RunItems
         Size <- RunSize
         Need <- RunNeed
+        Ordered <- RunOrdered
         Limit = #{run.yard.places["warehouse"].stock.limit}
         Capacity = #{run.yard.vehicles["truck"].capacity}
         Tasks <- RunTasks

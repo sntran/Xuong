@@ -118,7 +118,7 @@ defmodule World.ModelsTest do
   test "the cab of a van has the seats of its body: the front seats, a row more in the crew van" do
     seats = fn windows ->
       van = Detail.with(:near, fn -> World.Vehicles.Van.build("transit_148", windows: windows) end)
-      for {name, %World.Assembly{kind: :furniture}, c} <- van.nodes, do: {name, c.to, c.at}
+      for {name, %World.Assembly{kind: :seat}, c} <- van.nodes, do: {name, c.to, c.at}
     end
 
     front = [{"driver", "inside", "seat_driver"}, {"passenger", "inside", "seat_passenger"}]

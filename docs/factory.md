@@ -306,6 +306,13 @@ WebAssembly), one order alone:
 | A parked traveler on the motorbike, near | 230 MB | 172 MB |
 | A person (the defaults), near | 149 MB | 157 MB (no change: the person is the next step) |
 
+At the edge (the deploy of 8d59a75, the first request of each order),
+the near level now builds: a parked traveler on the motorbike (GLB,
+18.0 s), the log of a traveler on the motorbike (13.0 s, a run of
+7.3 s), a person with the defaults (GLB, 10.8 s), and a traveler in
+the car (GLB, 19.8 s). Before F4, part 2, the log of a traveler stopped
+the VM (503).
+
 The heap of the build of a person peaks near 38 MB, and the person (the
 item) is 12 MB of terms: lists of tuples of floats for each point. Less
 needs a packed format for the meshes (binaries of floats), a larger

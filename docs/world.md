@@ -393,7 +393,7 @@ order and the start of the VM):
 | The camper van | near (log) | 16.1 s | 7.7 s | 56 MB | Built |
 | A traveler of Phượt on the motorbike | far (GLB) | 12.5 s | | | Built |
 | A traveler of Phượt on the motorbike | mid (GLB) | 7.4 s | | | Built |
-| A traveler of Phượt on the motorbike | near (log) | 7.5 s | | | The VM stopped (503): not sufficient memory |
+| A traveler of Phượt on the motorbike | near (log) | 7.5 s | | | The VM stopped (503): not sufficient memory. After F4, part 2 (8d59a75): built, 13.0 s, a run of 7.3 s. |
 
 What they tell:
 
@@ -405,10 +405,10 @@ What they tell:
 - The memory of the processes is small (about 50 MB); the host sees
   more (178 to 216 MB in `wrangler dev`), because the heap of
   WebAssembly only grows and keeps the garbage of the build. At the
-  edge, the van at the near level fits, and a person at the near level
-  does not. Step F4 continues.
-- The log of an order (`/o/HASH.log.json`) is a run at the near level,
-  so the log of a traveler is not there at the edge yet.
+  edge, the van at the near level fits; a person at the near level fits
+  since F4, part 2 (`docs/factory.md`).
+- The log of an order (`/o/HASH.log.json`) is a run at the near level;
+  since F4, part 2 the log of a traveler is there at the edge too.
 
 ## The decisions
 

@@ -9,6 +9,15 @@ defmodule World.GeometryTest do
 
   defp vec, do: tuple({float(min: -10.0, max: 10.0), float(min: -10.0, max: 10.0), float(min: -10.0, max: 10.0)})
 
+  # A vector that is never near zero: a direction and a length from 0.1
+  # to 10 (a filter of vec/0 refuses too many small values).
+  defp axis do
+    gen all a <- float(min: 0.0, max: 6.28), z <- float(min: -1.0, max: 1.0), len <- float(min: 0.1, max: 10.0) do
+      r = :math.sqrt(1 - z * z)
+      {len * r * :math.cos(a), len * r * :math.sin(a), len * z}
+    end
+  end
+
   describe "Vec" do
     test "the basic operations" do
       assert Vec.add({1, 2, 3}, {1, 1, 1}) == {2, 3, 4}
@@ -28,7 +37,7 @@ defmodule World.GeometryTest do
     end
 
     property "perpendicular gives a unit vector at a right angle" do
-      check all v <- vec(), Vec.len(v) > 0.01 do
+      check all v <- axis() do
         p = Vec.perpendicular(v)
         assert abs(Vec.len(p) - 1) < 1.0e-9
         assert abs(Vec.dot(p, Vec.norm(v))) < 1.0e-9
@@ -38,7 +47,7 @@ defmodule World.GeometryTest do
 
   describe "Frame" do
     property "invert undoes a frame" do
-      check all at <- vec(), axis <- vec(), deg <- float(min: -360.0, max: 360.0), Vec.len(axis) > 0.01 do
+      check all at <- vec(), axis <- axis(), deg <- float(min: -360.0, max: 360.0) do
         f = Frame.compose(Frame.move(at), Frame.turn(axis, deg))
         p = {0.3, -1.2, 2.5}
         assert close?(Frame.point(Frame.invert(f), Frame.point(f, p)), p, 1.0e-7)
@@ -46,7 +55,7 @@ defmodule World.GeometryTest do
     end
 
     property "new gives a frame with its z on the axis and the right hand" do
-      check all axis <- vec(), Vec.len(axis) > 0.01 do
+      check all axis <- axis() do
         up = Vec.perpendicular(axis)
         f = Frame.new({1, 2, 3}, axis, up)
         assert close?(f.z, Vec.norm(axis), 1.0e-9)

@@ -57,12 +57,31 @@ defmodule World.People.Data do
     end)
   end
 
+  # A parse makes much garbage. A short process parses and puts the
+  # value in `:persistent_term`: its heap goes at its end, and the caller
+  # gets the value with no copy. An error in the parse is raised again in
+  # the caller.
   defp cached(key, fun) do
     k = {__MODULE__, key}
 
     case :persistent_term.get(k, nil) do
-      nil -> tap(fun.(), &:persistent_term.put(k, &1))
-      value -> value
+      nil ->
+        {pid, ref} =
+          spawn_monitor(fn ->
+            try do
+              :persistent_term.put(k, fun.())
+            catch
+              kind, reason -> exit({:raise, kind, reason, __STACKTRACE__})
+            end
+          end)
+
+        receive do
+          {:DOWN, ^ref, :process, ^pid, :normal} -> :persistent_term.get(k)
+          {:DOWN, ^ref, :process, ^pid, {:raise, kind, reason, stack}} -> :erlang.raise(kind, reason, stack)
+        end
+
+      value ->
+        value
     end
   end
 

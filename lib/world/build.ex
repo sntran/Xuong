@@ -15,7 +15,7 @@ defmodule World.Build do
     is only in mid and far: it stands in for many small parts (one wall
     in place of its bricks).
   """
-  alias World.{Assembly, Figure, Frame, GLB, Joint, Mesh, Part, Port, Scene, Vec}
+  alias World.{Assembly, Detail, Figure, Frame, GLB, Joint, Mesh, Part, Port, Scene, Vec}
   alias World.Assembly.Connection
 
   @limits %{near: {0.0, 0.0}, mid: {0.02, 0.003}, far: {0.10, 0.01}}
@@ -306,26 +306,28 @@ defmodule World.Build do
     {nodes ++ split, parts}
   end
 
+  # One material at a time: the corners of one material are live, not
+  # the corners of all the parts, and a full collection after each
+  # primitive keeps the peak low (`World.Detail.collect/1`).
   defp primitives(parts) do
-    corners =
-      parts
-      |> Enum.flat_map(fn {f, p, _} -> for m <- p.shapes, do: {m.material, place(triangles(m), f)} end)
-      |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
+    parts
+    |> Enum.flat_map(fn {f, p, _} -> for m <- p.shapes, do: {m.material, {f, m}} end)
+    |> Enum.group_by(&elem(&1, 0), &elem(&1, 1))
+    |> Enum.sort_by(&elem(&1, 0))
+    |> Enum.map(fn {mat, shapes} ->
+      # The triangles of a mesh, kept for the next part with the same
+      # mesh (a bolt), for this material only.
+      {corners, _} =
+        Enum.flat_map_reduce(shapes, %{}, fn {f, m}, memo ->
+          tris = Map.get_lazy(memo, m, fn -> Mesh.triangles(m) end)
+          {place(tris, f), Map.put(memo, m, tris)}
+        end)
 
-    for {mat, lists} <- Enum.sort_by(corners, &elem(&1, 0)), do: Scene.primitive(mat, Enum.concat(lists))
+      mat |> Scene.primitive(corners) |> Detail.collect()
+    end)
   end
 
   defp place(corners, f), do: for({p, n} <- corners, do: {Frame.point(f, p), Frame.dir(f, n)})
-
-  # The triangles of a mesh, kept for the next part with the same mesh.
-  defp triangles(%Mesh{} = m) do
-    key = {:world_tris, :erlang.phash2(m)}
-
-    case Process.get(key) do
-      nil -> tap(Mesh.triangles(m), &Process.put(key, &1))
-      tris -> tris
-    end
-  end
 
   # The root part of a model stays at each level: a small model (a
   # switch of 7 cm) keeps its body at far.

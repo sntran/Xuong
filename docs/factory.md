@@ -273,8 +273,46 @@ VM at rest, natively, in one process that builds the GLB of a person
 - The GLB writer puts the points into the binary with no list of them
   in the axes of glTF, and takes their bounds from the binary.
 
-Still to do: measure at the edge (Node.js 25; this computer has 22);
-the data of MakeHuman in the memory of the VM (the targets are a
+F4, part 2 (2026-10-31). Two causes of the peak of a build, and the
+load of the data. The files are the same, byte for byte.
+
+- `World.Build` placed the corners of all the parts of a model before
+  it made one primitive for each material, and it kept the triangles of
+  each mesh in the dictionary of the process for all the later builds of
+  that process (a worker, a foreman). Now it makes one material at a
+  time, keeps the triangles of the meshes of that material only, and
+  collects the garbage after each primitive.
+- The data of MakeHuman: a short process parses each file and puts it
+  in `:persistent_term`, so the garbage of the parse and a second copy
+  of the data are not in the process of the build.
+
+The peak of `:erlang.memory(:total)` over the VM at rest, natively, for
+an order through the world (`World.Orders.build/3`, GLB at near):
+
+| Order | Before | After |
+|---|---|---|
+| The camper van | +185 MB | +71 MB |
+| A parked traveler on the motorbike, first order of the VM | +200 MB | +159 MB |
+| A parked traveler on the motorbike, data loaded | +162 MB | +109 MB |
+| A person (the defaults), first order of the VM | +159 MB | +115 MB |
+| The scene of the motorbike alone (Honda Vision, near) | +82 MB | +33 MB |
+
+The memory of the VM in `wrangler dev` (the host, all of the heap of
+WebAssembly), one order alone:
+
+| Order | Before | After |
+|---|---|---|
+| The camper van, near | 182 MB | 95 MB |
+| A parked traveler on the motorbike, near | 230 MB | 172 MB |
+| A person (the defaults), near | 149 MB | 157 MB (no change: the person is the next step) |
+
+The heap of the build of a person peaks near 38 MB, and the person (the
+item) is 12 MB of terms: lists of tuples of floats for each point. Less
+needs a packed format for the meshes (binaries of floats), a larger
+change.
+
+Still to do: a packed format for the meshes of a person; the data of
+MakeHuman in the memory of the VM (the targets are a
 binary of 14.6 MB, the base mesh 6 MB of terms, the assets 8 MB: a
 format that reads only the targets of a person); and the peak at the
 end of a build, where the person, the scene and the buffer of the GLB

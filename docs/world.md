@@ -217,13 +217,16 @@ The code times are the mean of three builds at the near level, with
 | A wall of 164 bricks (`wall_brick_sample`) | 15 ms | 164 × 58 s: a bricklayer lays about 500 bricks in a day of 8 hours. | About 650,000 |
 | A house of 7,108 bricks (`house_brick_vn`) | 1.9 s | About 114 hours of bricklaying. | About 215,000 |
 
-At the edge, the VM runs in a WebAssembly interpreter, about 10 times
-slower than native code: there the ratio is about 20,000 to 65,000.
+At the edge, the VM runs in WebAssembly. The first guess was 10 times
+slower than native code; step W7 measured 2 to 3 times (V8 compiles
+the WebAssembly), so there the ratio is about 15,000 for the van.
 
-One day for one second (86,400) is between the two. With this scale, a
-worker of the world builds a van in 11 hours (native code) to 4.6 days
-(the edge). A real plant takes about 30 hours: the same order of size. A faster computer is a faster factory, as a better tool is in the
-real world. Step W7 measures the ratio at the edge again. The owner
+One day for one second (86,400) is near the two. With this scale, a
+worker of the world builds a van in 11 hours (native code) to about 28
+hours (the edge, 2.5 times slower). A real plant takes about 30 hours: the same order of size. A faster computer is a faster factory, as a better tool is in the
+real world. Step W7 measured the edge again ("The measures of a run"):
+the code there is 2 to 3 times slower than native code, and the ratio
+for the van is about 15,000. The owner
 can change the scale: it is one number of the world, and each log keeps
 it.
 
@@ -276,6 +279,7 @@ order (`/o/HASH.log.json`).
 | `model_done` | The factory | The hash, the size of the files. |
 | `delivered` | The driver, the site of the customer | The project that reads the files. |
 | `build_started`, `build_done` | A place | A new building of the world, from its own order. |
+| `run_done` | The run (`World.Run.measure/3`) | The time of the run on the wall clock (`ms`), and the memory of the VM: the most (`memory_peak`) and at the end (`memory_end`), in bytes, with what they count (`memory`: `total`, or `processes` at the edge). |
 
 Each event has: `at` (the time), `order` (the hash), `place`, `person`
 or `vehicle`, `kind`, and the data of its kind. A test reads a log and
@@ -364,6 +368,33 @@ the log of a real run of the van (343 events) is a behavior of the
 specification, with the plan of the van as its constants. A log with an
 event less, or with two workers on one task, is not.
 
+## The measures of a run
+
+Step W7. The run of an order through the world, with the measures of
+its log (`run_done`). Native: BEAM.com 0.1.0-rc.6 on the computer of the
+development, `mix run`. WebAssembly: the same `edge.com` in `wrangler
+dev` (workerd on the same computer, with no limit of memory), the first
+request of each order.
+
+| Order | Level | Native run | Native memory (total) | WebAssembly run | WebAssembly memory (processes) | WebAssembly memory (host) |
+|---|---|---|---|---|---|---|
+| A traveler of Phượt on the motorbike | far | 1.9 s | 158 MB | about 8 s for the request | | 126 MB |
+| A traveler of Phượt, parked | near | 4.0 s | 254 MB | 10.1 s | 55 MB | 216 MB |
+| The camper van | near | 3.0 s | 277 MB | 7.3 s | 51 MB | 178 MB |
+
+What they tell:
+
+- The code at the edge is 2 to 3 times slower than native code, not 10
+  times (V8 compiles the WebAssembly). So the ratio of the real time to
+  the time of the code (section "Time") is about 15,000 for the van at
+  the edge: 30 hours of work (108,000 s) over 7.3 s.
+- The memory of the processes is small (about 50 MB); the host sees
+  much more (178 to 216 MB), because the heap of WebAssembly only grows
+  and keeps the garbage of the build. A Worker has 128 MB: the far level
+  fits, and a run at the near level does not. Step F4 continues.
+- The log of an order (`/o/HASH.log.json`) is a run at the near level,
+  so at the edge it needs more memory than a Worker has.
+
 ## The decisions
 
 | Topic | Decision | Why |
@@ -398,11 +429,12 @@ and a picture of the replay where there is one.
 | W4. The factories | The wheel factory and the seat factory next to the vehicle factory, each with its foreman, its worker and the driver of its truck. The family of an item is the kind of its assembly (`World.Places.family_of/1`: `:wheel`, `:seat`). The plan of a factory (`World.Plan.flat/2` with its family) leaves a smaller assembly of another family to the factory of that family: the foreman orders it (`part_ordered`, the order `ORDER/wheels`), that factory makes it (`World.Plan.batch/2`) from the parts of the warehouse, and its truck brings it to the dock (`received`). A factory does one order at a time; the next order waits. `specs/Order.tla` has the action `Receive`. Done. | The log of a van: the wheels come from the wheel factory, the seats from the seat factory, each by a drive (`test/world/run_test.exs`). The log of the van replays in the specification. |
 | W5. The buildings | The warehouse and the factories are orders: the people build them, and the log has the build. `World.Buildings.Plants`: a building is a house of World (walls of 2x4 studs, a metal roof, a door at the left end); a warehouse has one rack of strut channel for each 64 MiB of its store (a number of the world), in two rows; a factory has 3 m of length for each worker. `World.Run.build/3`: `build_started` (the model and its size), the order to the houses factory (a factory of the run now), the delivery to the place, and `build_done`. Each event of a storekeeper has the bytes in the store and its limit, and the replay draws the racks of a warehouse under it, dark when full. The materials are parts of the house, from the warehouse: no materials factory yet. Done. | The log of a build of a warehouse (`test/world/run_test.exs`): 200 MiB gives four racks. The size of a warehouse from the limit of its store (`test/world/plants_test.exs`). |
 | W6. The stores | The stock is the files: each warehouse has a store (`World.Store`), and the stock keeps the files of each model in it (`World.Stock.put_files/3`). The kinds of a store: `:memory` (the memory of the VM, the store of the warehouses of a run by default), `:bucket` (an R2 bucket; on this computer a folder in its place, as the photos of Phượt), and `:release` (the catalog of the release, `priv/models`: read only and always full, `World.Places.catalog/3`). The yard of a run has an annex (a second warehouse, its storekeeper `tam`, a road to each factory) and, with the option `catalog`, the catalog. A model in the stock of a warehouse (the warehouse first, then the catalog, then the annex) goes to the customer with its files. A full warehouse refuses the files of a new model: the driver of the warehouse brings them from the factory to the annex, and its storekeeper stores them. With the annex full too, the order fails. The R2 bucket from the VM at the edge (a port to a binding, as `PHOTO_STORE` of Phượt) is not there yet: today the Worker puts the files of an order in R2 after the run. Done. | A test with a small limit: the storekeeper refuses, and the foreman sends the model to another warehouse. |
-| W7. The site | The orders of the projects go through the world at <https://world.mkfifo.com> (done in W3). The measures of the edge: the time of a run and its memory. | An order of Phượt gives its files and its log. The times in the log agree with the times of the service. |
+| W7. The site | The orders of the projects go through the world at <https://world.mkfifo.com> (done in W3). Each run of an order has its measures in its log (`run_done`, `World.Run.measure/3`): the time of the wall clock, and the memory of the VM, sampled each 25 ms. At the edge the emulator has no allocators of ERTS (`-Mea min`), so `:erlang.memory/1` is not there: the log then counts the memory of the processes and of their binaries (`memory: "processes"`), and the host logs the memory of all of the VM (`beam: memory N MB`). `POST /build` gives the time of the build in the header `server-timing`. The release has no `priv/models` now (the site serves them): `edge.com` goes from 87 MB to 31 MB. The deploys after 29 October 2026 did not reach the site (it served `af1ad01`); a Worker of 87 MB is the probable cause. The numbers are in "The measures of a run" below. Done. | An order of Phượt gives its files and its log. The times in the log agree with the times of the service. |
 | W8. The other vans | The Sprinter, the ProMaster and the crew van of the Transit, built on the line of the vehicle factory. | As the Transit: a render next to the photo of the dealer. |
 | W9. The engineers | Later, with the owner. | — |
 
 ## Open questions for the owner
 
 - **The scale of the clock.** One second of the wall clock is one day of
-  the world (86,400). Step W7 measures the edge again.
+  the world (86,400). Step W7 measured the edge again: the code there
+  is 2 to 3 times slower than native code, so the scale stays.

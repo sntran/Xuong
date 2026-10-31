@@ -251,6 +251,53 @@ defmodule World.Run do
     result
   end
 
+  @doc """
+  Measure a function in the run (`docs/world.md`, step W7): the time of
+  the wall clock, and the memory of the VM (`memory/1`, each 25 ms and
+  at the end). The log gets `run_done` with `ms`, `memory_peak` and
+  `memory_end` (in bytes), and `memory` (what the bytes count). The
+  result is the result of the function.
+  """
+  def measure(%__MODULE__{log: log}, order, fun) do
+    sampler = spawn_link(fn -> sample(memory()) end)
+    start = System.monotonic_time(:millisecond)
+    result = fun.()
+    ms = System.monotonic_time(:millisecond) - start
+    send(sampler, {:peak, self()})
+    peak = receive do: ({:peak, peak} -> peak)
+    {what, bytes} = memory()
+    data = %{"ms" => ms, "memory_peak" => max(elem(peak, 1), bytes), "memory_end" => bytes, "memory" => what}
+    Server.record(log, "run_done", order: order, data: data)
+    result
+  end
+
+  defp sample({what, peak}) do
+    {_, now} = memory()
+    peak = {what, max(peak, now)}
+
+    receive do
+      {:peak, from} -> send(from, {:peak, peak})
+    after
+      25 -> sample(peak)
+    end
+  end
+
+  @doc """
+  The memory of the VM, in bytes: `{"total", bytes}` (`:erlang.memory/1`).
+  An emulator with no allocators of ERTS (`-Mea min`, at the edge) does
+  not have it: then `{"processes", bytes}`, the memory of each process
+  and of each binary that a process holds (one time each). `total` is
+  the function of the memory of all of the VM.
+  """
+  def memory(total \\ &:erlang.memory/1) do
+    {"total", total.(:total)}
+  rescue
+    ErlangError ->
+      infos = for p <- Process.list(), info = Process.info(p, [:memory, :binary]), do: info
+      binaries = for info <- infos, {id, size, _} <- info[:binary], into: %{}, do: {id, size}
+      {"processes", Enum.sum(for info <- infos, do: info[:memory]) + Enum.sum(Map.values(binaries))}
+  end
+
   @doc "The log of the run (`World.Log`)."
   def log(%__MODULE__{log: log}), do: Server.log(log)
 

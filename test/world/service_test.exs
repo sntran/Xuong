@@ -55,6 +55,27 @@ defmodule World.ServiceTest do
     assert [%{"path" => "level"}] = json(call(:post, "/build?level=huge", @strut))["errors"]
   end
 
+  test "an order of Phượt (a traveler) gives its files and its log, and the times agree" do
+    order = ~s({"blueprint": "traveler", "options": {"vehicle": "motorbike"}})
+    assert <<"glTF", _::binary>> = call(:post, "/build?level=far", order).resp_body
+
+    log = call(:post, "/build?level=far&file=log", order)
+    assert ["build;dur=" <> ms] = Plug.Conn.get_resp_header(log, "server-timing")
+    {:ok, l} = World.Log.from_json(log.resp_body)
+    assert World.Log.check(l) == :ok
+    events = World.Log.events(l)
+    first = hd(events)
+    delivered = Enum.find(events, &(&1.kind == "delivered"))
+
+    # The run is in the time of the build in the service, and the events
+    # of the order are in the time of the run.
+    assert %{kind: "run_done", data: %{"ms" => run, "memory_peak" => peak, "memory_end" => memory}} = List.last(events)
+    assert run <= String.to_integer(ms)
+    assert delivered.wall - first.wall <= run
+    assert peak >= memory and memory > 0
+    assert List.last(events).data["memory"] == "total"
+  end
+
   test "two builds at one time: the second waits for the first, and each gives its file" do
     builds =
       for length <- [0.3, 0.4],

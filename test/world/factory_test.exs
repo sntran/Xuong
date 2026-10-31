@@ -183,7 +183,8 @@ defmodule World.FactoryTest do
       assert %{"kind" => "warehouse"} = Enum.find(log.yard["places"], &(&1["name"] == "warehouse"))
       events = World.Log.events(log)
       assert hd(events).kind == "order_received"
-      assert List.last(events).kind == "delivered"
+      # The last event is the measure of the run, after the delivery.
+      assert Enum.map(Enum.take(events, -2), & &1.kind) == ["delivered", "run_done"]
       hash = Orders.hash(elem(Orders.check(order), 1))
       assert Enum.all?(events, &(&1.order == hash))
 

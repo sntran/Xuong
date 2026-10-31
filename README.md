@@ -118,7 +118,8 @@ models").
 | W4. The world: the factories | The wheel factory and the seat factory next to the vehicle factory. A smaller assembly of another family is an order to the factory of its family, and its truck brings it by road. | Done |
 | W5. The world: the buildings | The people build the warehouse and the factories as orders to the houses factory. A warehouse has a rack for each 64 MiB of its store, and the replay shows how full they are. | Done |
 | W6. The world: the stores | The stock is the files: each warehouse has a store (the memory of the VM, a bucket, or the catalog of the release). A full warehouse refuses the model, and the driver brings it to the annex. A second order gets the same files from the stock. | Done |
-| W7 to W9. The world | The measures of the site, the other vans, the engineers. | To do |
+| W7. The world: the measures | Each run has its time and its memory in its log. An order of Phượt gives its files and its log, and the times agree with the service. The release is 31 MB (no catalog files in it), so the site can deploy again. | Done |
+| W8 to W9. The world | The other vans, the engineers. | To do |
 | 7. DIY uses World | DIY draws its SVG from the models, and keeps its pictures. | To do |
 | 8. Voxel models | The `.vox` reader and writer, the voxel maker, and the stamp of a model into the grid of Tre. | To do |
 | 9. STL for a printer | STL at a scale, for each material too, and the checks of a print. | To do |

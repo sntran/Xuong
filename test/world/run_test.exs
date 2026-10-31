@@ -234,4 +234,10 @@ defmodule World.RunTest do
     assert {:error, {:diverged, %{who: "em"}}} =
              World.OrderSpec.replay([start.("dung"), start.("em")], result, run, dir)
   end
+
+  test "the memory of the VM with no allocators of ERTS: the processes and their binaries" do
+    assert {"total", total} = Run.memory()
+    assert {"processes", bytes} = Run.memory(fn :total -> :erlang.error(:notsup) end)
+    assert bytes > 0 and bytes < total
+  end
 end

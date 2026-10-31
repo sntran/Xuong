@@ -9,7 +9,9 @@ defmodule World.Service do
     full order), or 422 with `{"errors"}`.
   - `POST /build?level=near&file=glb`: an order in the body. 200 with the
     file (`World.Orders.files/0`: `glb`, `log`, `replay`, `parts` or
-    `receipt`), or 422 with `{"errors"}`.
+    `receipt`), or 422 with `{"errors"}`. The header `server-timing`
+    has the time of the build in the VM (`build;dur=MS`), with no wait
+    for the build before it.
 
   A body that is not JSON gives 400. A body of more than 1 MB gives 413.
   """
@@ -48,9 +50,15 @@ defmodule World.Service do
     level = Map.get(conn.query_params, "level", "near")
 
     with_order(conn, fn order ->
-      case one_at_a_time(fn -> Orders.build(order, level, file) end) do
-        {:ok, out} -> conn |> put_resp_content_type(Map.fetch!(@types, file), nil) |> send_resp(200, out)
-        {:error, errors} -> json(conn, 422, %{"errors" => errors})
+      case one_at_a_time(fn -> :timer.tc(Orders, :build, [order, level, file], :millisecond) end) do
+        {ms, {:ok, out}} ->
+          conn
+          |> put_resp_header("server-timing", "build;dur=#{ms}")
+          |> put_resp_content_type(Map.fetch!(@types, file), nil)
+          |> send_resp(200, out)
+
+        {_, {:error, errors}} ->
+          json(conn, 422, %{"errors" => errors})
       end
     end)
   end

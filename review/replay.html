@@ -122,6 +122,7 @@ function say(e) {
   switch (e.kind) {
     case 'order_received': return d.items ? `${e.who} gets the order of the ${d.for} for ${d.items.join(', ')}.` : `${e.who} gets the order of ${d.item}.`;
     case 'build_started': return `The building of the ${e.place} starts${d.racks ? `: ${d.racks} racks` : ''}.`;
+    case 'run_done': return `The run ends: ${(d.ms / 1000).toFixed(1)} s of the wall clock, ${Math.round(d.memory_peak / 1048576)} MB of memory at most.`;
     case 'build_done': return `The building of the ${e.place} is done.`;
     case 'part_ordered': return `${e.who} orders ${Object.entries(d.items).map(([i, c]) => `${c} ${i}`).join(', ')} from the ${d.factory}.`;
     case 'received': return `${n('item')} arrives at the ${e.place} from the ${d.order.split('/').pop()}.`;

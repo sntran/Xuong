@@ -171,10 +171,13 @@ defmodule World.Orders do
   defp make("parts", _order, _lvl, item, _scene), do: parts(item.())
   defp make("receipt", order, lvl, item, scene), do: receipt(order, lvl, scene.(item.(), []))
 
-  # A run of the world for the order: the files of the model and the log.
+  # A run of the world for the order: the files of the model and the log,
+  # with the time and the memory of the run (run_done).
   defp world(order, item, scene) do
     run = Run.start()
-    {:ok, result} = Run.order(run, item, hash(order), files: &GLB.encode(scene.(&1, [])))
+    hash = hash(order)
+    order = fn -> Run.order(run, item, hash, files: &GLB.encode(scene.(&1, []))) end
+    {:ok, result} = Run.measure(run, hash, order)
     log = Run.log(run)
     Run.stop(run)
     {result.glb, Log.to_json(log)}

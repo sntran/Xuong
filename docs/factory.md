@@ -359,7 +359,7 @@ The owner does this one time:
 3. Make the R2 bucket of the orders before the first deploy:
    `npx wrangler r2 bucket create world`. It needs no public
    access: the Worker reads it.
-4. The Worker needs the Workers Paid plan: `edge.com` is about 45 MB, and
+4. The Worker needs the Workers Paid plan: `edge.com` is about 31 MB (with no files of the catalog: the site serves them), and
    a build takes more CPU time than the Free plan gives.
 
 To try it on this computer: `npm install && npm run build && npx

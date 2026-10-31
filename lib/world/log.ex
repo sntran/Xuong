@@ -15,7 +15,7 @@ defmodule World.Log do
 
   @kinds ~w(order_received plan_made stock_checked part_ordered picked stored refused
             loaded departed arrived unloaded received task_started task_done model_done delivered
-            build_started build_done)
+            build_started build_done run_done)
 
   defmodule Event do
     @moduledoc "One thing that happened: its world time, wall time, kind, order, place, person or vehicle, and data."

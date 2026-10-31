@@ -27,7 +27,10 @@ defmodule World.Scene do
     fur of each point (m) and the direction of the fur of each point (a
     unit vector along the skin, at rest), and the morph targets (a list of
     `{name, moves}` or `{name, moves, normals}`, a move for each point and
-    a change of each normal: the shapes of a face).
+    a change of each normal: the shapes of a face). The moves (or the
+    changes) can also be a map of the index of a point to its move: the
+    points not in the map do not move (a shape of the face moves few of
+    the points of a body).
     """
     defstruct material: :paint,
               positions: [],

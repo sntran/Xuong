@@ -4,14 +4,15 @@ defmodule World.Places do
   position on the yard, in meters, in one flat frame.
 
   - A **warehouse** keeps stock (`World.Stock`). Its limit is the size of
-    its store: one R2 bucket for each warehouse.
+    its store (`World.Store`): the memory of the VM, an R2 bucket, or the
+    catalog of the release (`catalog/3`).
   - A **factory** makes one family of things: `:materials`, `:frames`,
     `:houses`, `:wheels`, `:seats`, `:vehicles`, `:appliances`,
     `:clothes`, `:people`.
   - A **supplier** gives a part that the world cannot make.
   - A **site** is where a delivery ends: a project of the owner.
   """
-  alias World.Stock
+  alias World.{Stock, Store}
 
   @kinds [:warehouse, :factory, :supplier, :site]
   @families [:materials, :frames, :houses, :wheels, :seats, :vehicles, :appliances, :clothes, :people]
@@ -39,8 +40,15 @@ defmodule World.Places do
   def family_of(%World.Assembly{kind: kind}), do: Map.get(@family_of_kind, kind)
   def family_of(_item), do: nil
 
-  @doc "A warehouse with the limit of its store, in bytes."
-  def warehouse(name, at, limit), do: place(name, :warehouse, at, stock: Stock.new(limit))
+  @doc "A warehouse with the limit of its store, in bytes, and its store (the memory of the VM by default)."
+  def warehouse(name, at, limit, store \\ Store.memory()),
+    do: place(name, :warehouse, at, stock: Stock.new(limit, store))
+
+  @doc """
+  The catalog: a warehouse of the models of a release (the folder `dir`,
+  `World.Store.release/1`). It is read only and always full.
+  """
+  def catalog(name, at, dir), do: place(name, :warehouse, at, stock: Stock.catalog(Store.release(dir)))
 
   @doc "A factory of a family of things."
   def factory(name, at, family) do

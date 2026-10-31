@@ -146,10 +146,15 @@ tasks that it waits for, and a task that ends before its start.
 
 A specification is as useful as it is honest about its limits.
 
-- **One factory, one truck, one order at a time.** Step W4 adds the
-  factories by family, and sub-orders that go by road to another
-  factory. `Order.tla` gets a factory and a road for each family, and a
-  new invariant: a sub-order is delivered to the factory that ordered it.
+- **One factory, one truck, one order at a time.** The other factories
+  (step W4) are one action, `Receive`: an item arrives at the dock. Their
+  plans, their trucks and their queue of orders are not in the
+  specification.
+- **The annex.** A full warehouse refuses the files of the model, and
+  the truck brings them to the annex (step W6). The specification stops
+  at the refusal: the replay of such an order diverges at the haul to
+  the annex. The order from the stock (with the files from the store)
+  is not an action either.
 - **The time.** The specification has no clock. The log has the times,
   and `World.Log.check/1` checks them. The drive of the truck takes the
   length of the road over its speed: a test checks it, not the

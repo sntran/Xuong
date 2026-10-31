@@ -4,7 +4,8 @@ defmodule World.People.Storekeeper do
   the stock of one warehouse (`World.Stock`). The storekeeper takes the
   parts from a supplier into the store, picks them out of the store to
   the dock of the warehouse, and puts the files of a finished model into
-  the store. Each act is an event of the log.
+  the store, and reads them for an order of a model in stock. Each act is
+  an event of the log.
   """
   use GenServer
 
@@ -26,8 +27,14 @@ defmodule World.People.Storekeeper do
   @doc "Pick `n` items out of the store, to the dock of the warehouse: `:ok`, or `{:error, :missing}`."
   def pick(sk, order, item, n), do: GenServer.call(sk, {:pick, order, item, n})
 
-  @doc "Put the files of a model into the store: `:ok`, or `{:error, :full}`."
-  def store_model(sk, order, name, bytes), do: GenServer.call(sk, {:model, order, name, bytes})
+  @doc """
+  Put the files of a model into the store: `:ok`, or `{:error, reason}`
+  (`:full`, or `:read_only` for a catalog).
+  """
+  def store_model(sk, order, name, files), do: GenServer.call(sk, {:model, order, name, files})
+
+  @doc "Read the files of a model in the store: `{:ok, files}`, or `{:error, :missing}`."
+  def files(sk, order, name), do: GenServer.call(sk, {:files, order, name})
 
   @doc "The stock now."
   def stock(sk), do: GenServer.call(sk, :stock)
@@ -67,8 +74,10 @@ defmodule World.People.Storekeeper do
     end
   end
 
-  def handle_call({:model, order, name, bytes}, _from, s) do
-    case Stock.put(s.stock, name, 1, bytes) do
+  def handle_call({:model, order, name, files}, _from, s) do
+    bytes = byte_size(files)
+
+    case Stock.put_files(s.stock, name, files) do
       {:ok, stock} ->
         s = %{s | stock: stock}
         record(s, "stored", order, %{"model" => name, "bytes" => bytes})
@@ -77,6 +86,17 @@ defmodule World.People.Storekeeper do
       {:error, reason} ->
         record(s, "refused", order, %{"model" => name, "bytes" => bytes, "reason" => Atom.to_string(reason)})
         {:reply, {:error, reason}, s}
+    end
+  end
+
+  def handle_call({:files, order, name}, _from, s) do
+    case Stock.files(s.stock, name) do
+      {:ok, files} ->
+        record(s, "picked", order, %{"model" => name, "bytes" => byte_size(files)})
+        {:reply, {:ok, files}, s}
+
+      error ->
+        {:reply, error, s}
     end
   end
 

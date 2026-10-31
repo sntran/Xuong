@@ -95,7 +95,8 @@ The world of `docs/world.md`:
 |---|---|
 | `World.Clock` | The clock of the world: one second of the wall clock is one day of the world. |
 | `World.Places`, `World.Yard` | The places (warehouses, factories by family, suppliers, sites) on the yard, the roads between them, the people and the vehicles. |
-| `World.Stock` | The stock of a warehouse, with the limit of its store in bytes. |
+| `World.Stock` | The stock of a warehouse, with the limit of its store in bytes, and the files of its models in its store. |
+| `World.Store` | The store of the files of a warehouse: the memory of the VM, a bucket (a folder on this computer), or the catalog of the release (read only). |
 | `World.People.Person`, `World.Vehicles.Vehicle` | A person with a job (storekeeper, driver, worker, foreman), and a vehicle with its speed and its load. |
 | `World.Plan` | The tasks of an order, from the tree of its assembly. |
 | `World.Log` | The events of the world in the order of their time, in JSON, and their checks. `World.Log.Server` keeps the log of a run. |

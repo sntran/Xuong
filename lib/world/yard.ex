@@ -77,7 +77,8 @@ defmodule World.Yard do
             "kind" => Atom.to_string(p.kind),
             "family" => p.family && Atom.to_string(p.family),
             "at" => Tuple.to_list(p.at),
-            "limit" => p.stock && p.stock.limit
+            "limit" => p.stock && p.stock.limit,
+            "store" => p.stock && Atom.to_string(p.stock.store.kind)
           }
         ),
       "roads" =>

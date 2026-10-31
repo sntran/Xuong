@@ -127,9 +127,9 @@ function say(e) {
     case 'received': return `${n('item')} arrives at the ${e.place} from the ${d.order.split('/').pop()}.`;
     case 'stock_checked': return `${e.who} checks the stock: ${Object.values(d.missing ?? {}).reduce((a, b) => a + b, 0)} missing.`;
     case 'plan_made': return `${e.who} makes the plan: ${d.tasks.length} tasks.`;
-    case 'stored': return d.model ? `${e.who} puts the files of the model in the warehouse.` : `${e.who} puts ${n('item')} from the ${d.from} in the warehouse.`;
-    case 'refused': return `${e.who} refuses ${d.item ?? d.model}: the warehouse is full.`;
-    case 'picked': return `${e.who} picks ${n('item')} to the dock.`;
+    case 'stored': return d.model ? `${e.who} puts the files of the model in the ${e.place}.` : `${e.who} puts ${n('item')} from the ${d.from} in the ${e.place}.`;
+    case 'refused': return `${e.who} refuses ${d.item ?? d.model}: the ${e.place} is ${d.reason === 'read_only' ? 'read only' : 'full'}.`;
+    case 'picked': return d.model ? `${e.who} takes the files of the model from the ${e.place}.` : `${e.who} picks ${n('item')} to the dock.`;
     case 'loaded': return `${e.who} loads ${n('item')} on the ${d.vehicle}.`;
     case 'unloaded': return `${e.who} unloads ${n('item')} at the ${e.place}.`;
     case 'departed': return `${e.who} drives the ${d.vehicle} from the ${d.from} to the ${d.to}.`;
@@ -137,7 +137,7 @@ function say(e) {
     case 'task_started': return `${e.who} starts ${d.task}.`;
     case 'task_done': return `${e.who} ends ${d.task}.`;
     case 'model_done': return d.items ? `${e.who} ends ${Object.entries(d.items).map(([i, c]) => `${c} ${i}`).join(', ')}.` : `${e.who} makes the files of the model (${Math.round(d.bytes / 1024)} KB).`;
-    case 'delivered': return d.from === 'stock' ? `The ${e.place} gets ${d.item} from the stock.` : `The ${e.place} gets ${d.item}.`;
+    case 'delivered': return d.from === 'stock' ? `The ${e.place} gets ${d.item} from the stock of the ${d.warehouse}.` : `The ${e.place} gets ${d.item}${d.warehouse && d.warehouse !== 'warehouse' ? ` from the ${d.warehouse}` : ''}.`;
     default: return `${e.who ?? ''} ${e.kind}`.trim();
   }
 }

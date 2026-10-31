@@ -1,8 +1,10 @@
 defmodule World.Run do
   @moduledoc """
-  A run of the world (`docs/world.md`, steps W2, W4 and W5): orders
+  A run of the world (`docs/world.md`, steps W2, W4, W5 and W6): orders
   through the places and the people of a yard. The yard has one warehouse
-  with its storekeeper and the driver of its truck, four factories (the
+  with its storekeeper and the driver of its truck, an annex (a second
+  warehouse, for the models that the warehouse refuses) with its
+  storekeeper, the catalog of a release when it is given, four factories (the
   vehicles, the wheels, the seats and the houses), each with its foreman,
   its workers and (the wheels and the seats) the driver of its truck, a
   supplier, and the site of the customer. The people are processes. Each
@@ -40,14 +42,19 @@ defmodule World.Run do
 
   @doc """
   The yard of the run. The options: `limit` (the bytes of the warehouse,
-  1 GB by default), `capacity` (the items on the truck of the warehouse,
-  20 by default), `workers` (the names of the workers of the vehicle
-  factory), `clock`.
+  1 GB by default), `store` (the store of the warehouse,
+  `World.Store`, the memory of the VM by default), `annex_limit` and
+  `annex_store` (the same for the annex), `catalog` (the folder of the
+  models of a release, `World.Places.catalog/3`; no catalog by default),
+  `capacity` (the items on the truck of the warehouse, 20 by default),
+  `workers` (the names of the workers of the vehicle factory), `clock`.
   """
   def yard(opts \\ []) do
     yard =
       Yard.new(clock: Keyword.get_lazy(opts, :clock, &Clock.new/0))
-      |> Yard.add(Places.warehouse("warehouse", {0, 0}, Keyword.get(opts, :limit, 1_000_000_000)))
+      |> Yard.add(warehouse("warehouse", {0, 0}, opts[:limit], opts[:store]))
+      |> Yard.add(warehouse("annex", {200, -200}, opts[:annex_limit], opts[:annex_store]))
+      |> Yard.add(Person.new("tam", :storekeeper, "annex"))
       |> Yard.add(Places.supplier("supplier", {-200, 0}))
       |> Yard.add(Places.site("customer", {300, 900}))
       |> Yard.add(Person.new("an", :storekeeper, "warehouse"))
@@ -67,10 +74,11 @@ defmodule World.Run do
       end)
 
     factories
-    |> Enum.reduce(yard, fn f, yard ->
+    |> Enum.reduce(add_catalog(yard, opts[:catalog]), fn f, yard ->
       yard
       |> Yard.add(Places.factory(f.place, f.at, f.family))
       |> Yard.road("warehouse", f.place)
+      |> Yard.road("annex", f.place)
       |> Yard.add(Person.new(f.foreman, :foreman, f.place))
       |> add_workers(f.place, f.workers)
       |> add_out(f)
@@ -79,6 +87,17 @@ defmodule World.Run do
     |> Yard.road("wheels", "vehicles")
     |> Yard.road("seats", "vehicles")
   end
+
+  defp warehouse(name, at, limit, store),
+    do: Places.warehouse(name, at, limit || 1_000_000_000, store || World.Store.memory())
+
+  defp add_catalog(yard, nil), do: yard
+
+  defp add_catalog(yard, dir),
+    do:
+      yard
+      |> Yard.add(Places.catalog("catalog", {-100, -250}, dir))
+      |> Yard.add(Person.new("uyen", :storekeeper, "catalog"))
 
   defp add_workers(yard, place, names),
     do: Enum.reduce(names, yard, &Yard.add(&2, Person.new(&1, :worker, place, station: nil, figure: "man")))
@@ -91,16 +110,39 @@ defmodule World.Run do
 
   defp add_out(yard, _factory), do: yard
 
-  defstruct yard: nil, log: nil, storekeeper: nil, driver: nil, foreman: nil, foremen: %{}, workers: %{}, people: []
+  defstruct yard: nil,
+            log: nil,
+            storekeeper: nil,
+            storekeepers: %{},
+            driver: nil,
+            foreman: nil,
+            foremen: %{},
+            workers: %{},
+            people: []
 
   @doc """
   Start the people of a yard (`yard/1`) as processes, with the log of
-  the run. The stock of the warehouse stays between the orders. `workers`
-  are the workers of the vehicle factory, and `foreman` its foreman.
+  the run. The stock of the warehouses stays between the orders. `workers`
+  are the workers of the vehicle factory, and `foreman` its foreman;
+  `storekeepers` the storekeeper of each warehouse, by its place.
   """
   def start(yard \\ yard()) do
     {:ok, log} = Server.start_link(yard.clock, Yard.describe(yard))
-    {:ok, sk} = Storekeeper.start_link(name: "an", place: "warehouse", stock: yard.places["warehouse"].stock, log: log)
+
+    keepers =
+      for {name, %Person{job: :storekeeper, place: place}} <- yard.people, into: %{} do
+        {:ok, pid} = Storekeeper.start_link(name: name, place: place, stock: yard.places[place].stock, log: log)
+        {place, pid}
+      end
+
+    sk = keepers["warehouse"]
+
+    {catalogs, annexes} =
+      keepers
+      |> Map.delete("warehouse")
+      |> Enum.sort()
+      |> Enum.split_with(fn {place, _} -> yard.places[place].stock.store.kind == :release end)
+
     {:ok, driver} = Driver.start_link(name: "binh", vehicle: "truck", yard: yard, log: log)
 
     started =
@@ -130,6 +172,8 @@ defmodule World.Run do
             site: "customer",
             supplier: "supplier",
             storekeeper: sk,
+            annexes: annexes,
+            catalogs: catalogs,
             driver: driver,
             out: out,
             workers: workers,
@@ -143,13 +187,15 @@ defmodule World.Run do
     for {family, s} <- started, do: Foreman.factories(s.foreman, Map.delete(factories, family))
 
     people =
-      [log, sk, driver] ++
+      [log | Map.values(keepers)] ++
+        [driver] ++
         Enum.flat_map(started, fn {_, s} -> [s.foreman | Map.values(s.workers)] ++ List.wrap(s.out) end)
 
     %__MODULE__{
       yard: yard,
       log: log,
       storekeeper: sk,
+      storekeepers: keepers,
       driver: driver,
       foreman: started.vehicles.foreman,
       foremen: Map.new(started, fn {family, s} -> {family, s.foreman} end),
@@ -162,7 +208,8 @@ defmodule World.Run do
   Run an order of an item (or of a function that makes the item: the
   foreman calls it), and wait for its delivery: `{:ok, result}`
   (`from: :factory` with the plan, the bytes of each part and of the
-  model, and its files; or `from: :stock`), or `{:error, reason}`. The
+  model; or `from: :stock`; each with the files of the model and the
+  warehouse that keeps them), or `{:error, reason}`. The
   order goes to the factory of the family of the item
   (`World.Places.family_of/1`), the vehicles by default. The option
   `files` is the function that makes the files of the model from the

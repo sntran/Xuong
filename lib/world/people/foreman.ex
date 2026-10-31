@@ -3,8 +3,10 @@ defmodule World.People.Foreman do
   A foreman (`World.People.Person`, job `:foreman`) as a process: the
   foreman of one factory runs an order from the start to the delivery.
 
-  0. When the warehouse has the files of the model already (an order of
-     before), the customer gets them from the stock.
+  0. When a warehouse has the files of the model already (an order of
+     before, or the catalog of the release), the customer gets them from
+     the stock: the warehouse of the factory first, then the catalogs,
+     then the annexes.
   1. The foreman makes the plan of the order (`World.Plan.flat/2`, for
      the family of the factory). A smaller assembly of another family (the
      wheels, the seats) is an order to the factory of that family
@@ -21,8 +23,10 @@ defmodule World.People.Foreman do
      (`World.People.Worker`).
   5. When each task is done, the foreman makes the files of the model
      (`World.GLB`), the storekeeper puts them in the warehouse, and the
-     customer gets them. For an order of another factory, the driver of
-     this factory brings the items to the dock of that factory.
+     customer gets them. A full warehouse refuses them: the driver of the
+     warehouse brings them to the next annex (another warehouse), and its
+     storekeeper puts them there. For an order of another factory, the
+     driver of this factory brings the items to the dock of that factory.
 
   A factory does one order at a time; the next order waits.
   """
@@ -37,7 +41,10 @@ defmodule World.People.Foreman do
   (the family of the factory, `:vehicles` by default), `warehouse`,
   `site`, `supplier`, `storekeeper`, `driver` (the driver of the
   warehouse), `out` (the driver of this factory, for the orders of other
-  factories), `workers` (a map of the names to the processes), `log`.
+  factories), `workers` (a map of the names to the processes), `log`,
+  `annexes` (the other warehouses, `[{place, storekeeper}]`, for a model
+  that the warehouse refuses) and `catalogs` (the warehouses of the
+  release, read only).
   The other factories come with `factories/2`.
   """
   def start_link(opts), do: GenServer.start_link(__MODULE__, Map.new(opts))
@@ -52,7 +59,8 @@ defmodule World.People.Foreman do
   @doc """
   Run an order of an item (or of a function that makes it, in the
   process of the foreman), and wait for its delivery: `{:ok, result}`, with
-  the plan, the bytes of each part and of the model; or `{:error, reason}`.
+  the plan, the bytes of each part and of the model, its files (`glb`)
+  and the warehouse that keeps them; or `{:error, reason}`.
   `files` makes the files of the model from the item (`files/1`). The
   model goes to `site` (the site of the customer by default; a place of
   the world for its building).
@@ -73,7 +81,10 @@ defmodule World.People.Foreman do
   def files(item), do: item |> Build.scene() |> GLB.encode()
 
   @impl true
-  def init(state), do: {:ok, state |> Map.put_new(:family, :vehicles) |> Map.merge(%{factories: %{}, queue: []})}
+  def init(state) do
+    state = state |> Map.put_new(:family, :vehicles) |> Map.put_new(:annexes, []) |> Map.put_new(:catalogs, [])
+    {:ok, Map.merge(state, %{factories: %{}, queue: []})}
+  end
 
   @impl true
   def handle_call({:factories, factories}, _from, f), do: {:reply, :ok, %{f | factories: factories}}
@@ -83,15 +94,28 @@ defmodule World.People.Foreman do
     record(f, "order_received", order, f.place, %{"item" => item.name})
     model = model(item)
 
-    case Storekeeper.check(f.storekeeper, order, %{model => 1}) do
-      %{^model => 0} ->
-        record(f, "delivered", order, site || f.site, %{"item" => item.name, "from" => "stock"})
-        {:reply, {:ok, %{from: :stock}}, f}
+    case in_stock(f, order, model) do
+      {place, glb} ->
+        data = %{"item" => item.name, "from" => "stock", "warehouse" => place}
+        record(f, "delivered", order, site || f.site, data)
+        {:reply, {:ok, %{from: :stock, warehouse: place, glb: glb}}, f}
 
-      _ ->
+      nil ->
         plan = Plan.flat(item, family: if(map_size(f.factories) > 0, do: f.family))
         start(f, %{order: order, item: item, files: files, from: from, plan: plan, site: site || f.site})
     end
+  end
+
+  # The first warehouse with the files of the model: `{place, files}`.
+  defp in_stock(f, order, model) do
+    Enum.find_value([{f.warehouse, f.storekeeper} | f.catalogs ++ f.annexes], fn {place, sk} ->
+      with %{^model => 0} <- Storekeeper.check(sk, order, %{model => 1}),
+           {:ok, glb} <- Storekeeper.files(sk, order, model) do
+        {place, glb}
+      else
+        _ -> nil
+      end
+    end)
   end
 
   @doc "The name of the files of a model in the stock of a warehouse."
@@ -147,7 +171,10 @@ defmodule World.People.Foreman do
     end
   end
 
+  # The files of the model at the dock of an annex.
   @impl true
+  def handle_info({:unloaded, _order, _item, _n}, %{run: %{annex: _}} = f), do: {:noreply, f}
+
   def handle_info({:unloaded, order, item, n}, %{run: r} = f) do
     # An item of an order of this factory to another: it arrives from
     # that factory.
@@ -159,6 +186,9 @@ defmodule World.People.Foreman do
 
   # The end of a haul of the driver of the warehouse; the end of a haul of
   # another factory changes nothing.
+  def handle_info({:hauled, driver}, %{run: %{annex: {place, sk}}} = f) when driver == f.driver,
+    do: store(f, Map.delete(f.run, :annex), place, sk)
+
   def handle_info({:hauled, driver}, f) do
     if driver == f.driver and Map.has_key?(f, :run),
       do: f |> put_run(%{f.run | hauled: true}) |> finish(),
@@ -231,18 +261,22 @@ defmodule World.People.Foreman do
     if r.waiting == [] and r.hauled and length(r.free) == map_size(f.workers) and
          MapSet.size(r.done) == length(r.plan.tasks) do
       if Map.has_key?(r, :requester), do: ship(f, r), else: deliver(f, r)
-      f = Map.delete(f, :run)
-
-      case f.queue do
-        [] ->
-          # The plan and the files of the order are garbage now.
-          {:noreply, f, :hibernate}
-
-        [job | rest] ->
-          sub_order(%{f | queue: rest}, job)
-      end
     else
       {:noreply, f}
+    end
+  end
+
+  # The end of a run: the next order in the queue.
+  defp done(f) do
+    f = Map.delete(f, :run)
+
+    case f.queue do
+      [] ->
+        # The plan and the files of the order are garbage now.
+        {:noreply, f, :hibernate}
+
+      [job | rest] ->
+        sub_order(%{f | queue: rest}, job)
     end
   end
 
@@ -252,6 +286,7 @@ defmodule World.People.Foreman do
     counts = r.items |> Enum.frequencies_by(fn {_, i} -> i.name end) |> Enum.sort()
     record(f, "model_done", r.order, f.place, %{"items" => Map.new(counts)})
     Driver.haul(f.out, r.order, counts, f.place, r.to, r.requester)
+    done(f)
   end
 
   # An order of a customer: the foreman makes the files, the storekeeper
@@ -262,18 +297,28 @@ defmodule World.People.Foreman do
     glb = r.files.(r.item)
     bytes = byte_size(glb)
     record(f, "model_done", r.order, f.place, %{"item" => r.item.name, "bytes" => bytes})
+    store(f, Map.merge(r, %{glb: glb, bytes: bytes, left: f.annexes}), f.warehouse, f.storekeeper)
+  end
 
-    result =
-      case Storekeeper.store_model(f.storekeeper, r.order, model(r.item), bytes) do
-        :ok ->
-          record(f, "delivered", r.order, r.site, %{"item" => r.item.name, "bytes" => bytes})
-          {:ok, %{from: :factory, plan: r.plan, sizes: r.sizes, bytes: bytes, glb: glb}}
+  # The files go into a warehouse, and the customer gets them. A full
+  # warehouse refuses them: the driver of the warehouse brings them from
+  # the factory to the next annex.
+  defp store(f, r, place, sk) do
+    case {Storekeeper.store_model(sk, r.order, model(r.item), r.glb), r.left} do
+      {:ok, _} ->
+        record(f, "delivered", r.order, r.site, %{"item" => r.item.name, "bytes" => r.bytes, "warehouse" => place})
+        result = %{from: :factory, plan: r.plan, sizes: r.sizes, bytes: r.bytes, glb: r.glb, warehouse: place}
+        GenServer.reply(r.from, {:ok, result})
+        done(f)
 
-        error ->
-          error
-      end
+      {{:error, :full}, [{next, next_sk} | left]} ->
+        Driver.haul(f.driver, r.order, [{model(r.item), 1}], f.place, next, self())
+        {:noreply, put_run(f, Map.merge(r, %{annex: {next, next_sk}, left: left}))}
 
-    GenServer.reply(r.from, result)
+      {error, _} ->
+        GenServer.reply(r.from, error)
+        done(f)
+    end
   end
 
   defp record(f, kind, order, place, data),

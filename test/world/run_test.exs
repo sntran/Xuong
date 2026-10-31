@@ -76,7 +76,8 @@ defmodule World.RunTest do
     assert World.OrderSpec.replay(events, result, run, dir, guard: false) == :ok
 
     # The same order a second time comes from the stock.
-    assert Run.order(run, van, "van-2") == {:ok, %{from: :stock}}
+    # The second order gets the same files from the stock.
+    assert Run.order(run, van, "van-2") == {:ok, %{from: :stock, warehouse: "warehouse", glb: result.glb}}
     assert %{kind: "delivered", data: %{"from" => "stock"}} = List.last(Log.events(Run.log(run)))
     assert Run.stop(run) == :ok
   end
@@ -144,10 +145,65 @@ defmodule World.RunTest do
     Run.stop(run)
   end
 
-  test "a warehouse too small for the files of the model refuses them" do
+  test "a warehouse too small for the files of the model refuses them, and the driver brings them to the annex" do
     run = Run.start(Run.yard(limit: 10_000))
+    assert {:ok, %{from: :factory, warehouse: "annex", glb: glb}} = Run.order(run, Seats.seat("s"), "s-1")
+    events = Log.events(Run.log(run))
+    assert Log.check(Run.log(run)) == :ok
+
+    # The warehouse refuses the files; the truck drives them from the
+    # factory to the annex, and its storekeeper puts them in its store.
+    after_refused = Enum.drop_while(events, &(&1.kind != "refused"))
+    assert [%{place: "warehouse", data: %{"model" => "model:s", "reason" => "full"}} | rest] = after_refused
+
+    assert Enum.map(rest, &{&1.kind, &1.place}) == [
+             {"loaded", "seats"},
+             {"departed", "seats"},
+             {"arrived", "annex"},
+             {"unloaded", "annex"},
+             {"departed", "annex"},
+             {"arrived", "seats"},
+             {"stored", "annex"},
+             {"delivered", "customer"}
+           ]
+
+    assert %{who: "tam", data: %{"used" => used}} = Enum.find(rest, &(&1.kind == "stored"))
+    assert used == byte_size(glb)
+    assert List.last(events).data["warehouse"] == "annex"
+
+    # The next order of the seat gets the files from the stock of the annex.
+    assert Run.order(run, Seats.seat("s"), "s-2") == {:ok, %{from: :stock, warehouse: "annex", glb: glb}}
+    assert %{kind: "picked", place: "annex", data: %{"model" => "model:s"}} = Enum.at(Log.events(Run.log(run)), -2)
+    Run.stop(run)
+  end
+
+  test "with the annex full too, the order fails" do
+    run = Run.start(Run.yard(limit: 10_000, annex_limit: 10_000))
     assert Run.order(run, Seats.seat("s")) == {:error, :full}
-    assert %{kind: "refused", data: %{"model" => "model:s"}} = List.last(Log.events(Run.log(run)))
+    assert %{kind: "refused", place: "annex", data: %{"model" => "model:s"}} = List.last(Log.events(Run.log(run)))
+    Run.stop(run)
+  end
+
+  test "a model of the catalog of the release comes from its stock; the catalog takes no files", %{tmp_dir: dir} do
+    seat = Seats.seat("s")
+    File.write!(Path.join(dir, "s.glb"), "glTF the seat")
+    File.write!(Path.join(dir, "s.parts.json"), "[]")
+    yard = Run.yard(catalog: dir)
+    assert yard.places["catalog"].stock.limit == 13
+    run = Run.start(yard)
+    assert Run.order(run, seat, "s-1") == {:ok, %{from: :stock, warehouse: "catalog", glb: "glTF the seat"}}
+
+    assert %{"name" => "catalog", "store" => "release", "limit" => 13} =
+             Enum.find(Run.log(run).yard["places"], &(&1["name"] == "catalog"))
+
+    assert Storekeeper.store_model(run.storekeepers["catalog"], "o", "model:t", "glTF") == {:error, :read_only}
+    Run.stop(run)
+  end
+
+  test "the files of a model in a bucket (a folder on this computer)", %{tmp_dir: dir} do
+    run = Run.start(Run.yard(store: World.Store.bucket(Path.join(dir, "world"))))
+    assert {:ok, %{warehouse: "warehouse", glb: glb}} = Run.order(run, Seats.seat("s"), "s-1")
+    assert File.read!(Path.join(dir, "world/s.glb")) == glb
     Run.stop(run)
   end
 
@@ -156,6 +212,7 @@ defmodule World.RunTest do
     seat = Seats.seat("s")
     [t | _] = for t <- Plan.flat(seat).tasks, t.uses, do: t
     assert Storekeeper.pick(run.storekeeper, "o", t.uses, 1) == {:error, :missing}
+    assert Storekeeper.files(run.storekeeper, "o", "model:s") == {:error, :missing}
     assert :ok = Storekeeper.supply(run.storekeeper, "o", "supplier", t.uses, 1, :erlang.external_size(t.work))
     assert Stock.count(Storekeeper.stock(run.storekeeper), t.uses) == 1
     assert {:ok, %{from: :factory}} = Run.order(run, seat, "seat")

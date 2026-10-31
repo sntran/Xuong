@@ -382,18 +382,33 @@ request of each order.
 | A traveler of Phượt, parked | near | 4.0 s | 254 MB | 10.1 s | 55 MB | 216 MB |
 | The camper van | near | 3.0 s | 277 MB | 7.3 s | 51 MB | 178 MB |
 
+At the edge (the deploy of 3911c45 on <https://world.mkfifo.com>,
+2026-10-31, the first request of each order, with the check of the
+order and the start of the VM):
+
+| Order | Level | Time of the request | Run (`run_done`) | Memory (processes) | Result |
+|---|---|---|---|---|---|
+| A strut of 0.5 m | near (log) | 6.3 s | 6 ms | 1 MB | Built |
+| The camper van | far (GLB) | 9.4 s | | | Built |
+| The camper van | near (log) | 16.1 s | 7.7 s | 56 MB | Built |
+| A traveler of Phượt on the motorbike | far (GLB) | 12.5 s | | | Built |
+| A traveler of Phượt on the motorbike | mid (GLB) | 7.4 s | | | Built |
+| A traveler of Phượt on the motorbike | near (log) | 7.5 s | | | The VM stopped (503): not sufficient memory |
+
 What they tell:
 
 - The code at the edge is 2 to 3 times slower than native code, not 10
-  times (V8 compiles the WebAssembly). So the ratio of the real time to
-  the time of the code (section "Time") is about 15,000 for the van at
-  the edge: 30 hours of work (108,000 s) over 7.3 s.
+  times (V8 compiles the WebAssembly): the run of the van takes 7.7 s
+  at the edge and 3.0 s natively. So the ratio of the real time to the
+  time of the code (section "Time") is about 15,000 for the van at the
+  edge: 30 hours of work (108,000 s) over 7.7 s.
 - The memory of the processes is small (about 50 MB); the host sees
-  much more (178 to 216 MB), because the heap of WebAssembly only grows
-  and keeps the garbage of the build. A Worker has 128 MB: the far level
-  fits, and a run at the near level does not. Step F4 continues.
+  more (178 to 216 MB in `wrangler dev`), because the heap of
+  WebAssembly only grows and keeps the garbage of the build. At the
+  edge, the van at the near level fits, and a person at the near level
+  does not. Step F4 continues.
 - The log of an order (`/o/HASH.log.json`) is a run at the near level,
-  so at the edge it needs more memory than a Worker has.
+  so the log of a traveler is not there at the edge yet.
 
 ## The decisions
 
@@ -429,8 +444,8 @@ and a picture of the replay where there is one.
 | W4. The factories | The wheel factory and the seat factory next to the vehicle factory, each with its foreman, its worker and the driver of its truck. The family of an item is the kind of its assembly (`World.Places.family_of/1`: `:wheel`, `:seat`). The plan of a factory (`World.Plan.flat/2` with its family) leaves a smaller assembly of another family to the factory of that family: the foreman orders it (`part_ordered`, the order `ORDER/wheels`), that factory makes it (`World.Plan.batch/2`) from the parts of the warehouse, and its truck brings it to the dock (`received`). A factory does one order at a time; the next order waits. `specs/Order.tla` has the action `Receive`. Done. | The log of a van: the wheels come from the wheel factory, the seats from the seat factory, each by a drive (`test/world/run_test.exs`). The log of the van replays in the specification. |
 | W5. The buildings | The warehouse and the factories are orders: the people build them, and the log has the build. `World.Buildings.Plants`: a building is a house of World (walls of 2x4 studs, a metal roof, a door at the left end); a warehouse has one rack of strut channel for each 64 MiB of its store (a number of the world), in two rows; a factory has 3 m of length for each worker. `World.Run.build/3`: `build_started` (the model and its size), the order to the houses factory (a factory of the run now), the delivery to the place, and `build_done`. Each event of a storekeeper has the bytes in the store and its limit, and the replay draws the racks of a warehouse under it, dark when full. The materials are parts of the house, from the warehouse: no materials factory yet. Done. | The log of a build of a warehouse (`test/world/run_test.exs`): 200 MiB gives four racks. The size of a warehouse from the limit of its store (`test/world/plants_test.exs`). |
 | W6. The stores | The stock is the files: each warehouse has a store (`World.Store`), and the stock keeps the files of each model in it (`World.Stock.put_files/3`). The kinds of a store: `:memory` (the memory of the VM, the store of the warehouses of a run by default), `:bucket` (an R2 bucket; on this computer a folder in its place, as the photos of Phượt), and `:release` (the catalog of the release, `priv/models`: read only and always full, `World.Places.catalog/3`). The yard of a run has an annex (a second warehouse, its storekeeper `tam`, a road to each factory) and, with the option `catalog`, the catalog. A model in the stock of a warehouse (the warehouse first, then the catalog, then the annex) goes to the customer with its files. A full warehouse refuses the files of a new model: the driver of the warehouse brings them from the factory to the annex, and its storekeeper stores them. With the annex full too, the order fails. The R2 bucket from the VM at the edge (a port to a binding, as `PHOTO_STORE` of Phượt) is not there yet: today the Worker puts the files of an order in R2 after the run. Done. | A test with a small limit: the storekeeper refuses, and the foreman sends the model to another warehouse. |
-| W7. The site | The orders of the projects go through the world at <https://world.mkfifo.com> (done in W3). Each run of an order has its measures in its log (`run_done`, `World.Run.measure/3`): the time of the wall clock, and the memory of the VM, sampled each 25 ms. At the edge the emulator has no allocators of ERTS (`-Mea min`), so `:erlang.memory/1` is not there: the log then counts the memory of the processes and of their binaries (`memory: "processes"`), and the host logs the memory of all of the VM (`beam: memory N MB`). `POST /build` gives the time of the build in the header `server-timing`. The release has no `priv/models` now (the site serves them): `edge.com` goes from 87 MB to 31 MB. The deploys after 29 October 2026 did not reach the site (it served `af1ad01`); a Worker of 87 MB is the probable cause. The numbers are in "The measures of a run" below. Done. | An order of Phượt gives its files and its log. The times in the log agree with the times of the service. |
-| W8. The other vans | The Sprinter, the ProMaster and the crew van of the Transit, built on the line of the vehicle factory. | As the Transit: a render next to the photo of the dealer. |
+| W7. The site | The orders of the projects go through the world at <https://world.mkfifo.com> (done in W3). Each run of an order has its measures in its log (`run_done`, `World.Run.measure/3`): the time of the wall clock, and the memory of the VM, sampled each 25 ms. At the edge the emulator has no allocators of ERTS (`-Mea min`), so `:erlang.memory/1` is not there: the log then counts the memory of the processes and of their binaries (`memory: "processes"`), and the host logs the memory of all of the VM (`beam: memory N MB`). `POST /build` gives the time of the build in the header `server-timing`. The release has no `priv/models` now (the site serves them): `edge.com` goes from 87 MB to 31 MB. The deploys after 29 October 2026 did not reach the site (it served `af1ad01`); the first deploy with the smaller `edge.com` (3911c45) reached it, so the size of the Worker was the cause. The numbers are in "The measures of a run" below. Done. | An order of Phượt gives its files and its log. The times in the log agree with the times of the service. |
+| W8. The other vans | The Sprinter, the ProMaster and the crew van of the Transit, built on the line of the vehicle factory. Blocked (2026-10-31): the sizes of the makers are found, but not the traces of the side (see "Open questions for the owner"). | As the Transit: a render next to the photo of the dealer. |
 | W9. The engineers | Later, with the owner. | — |
 
 ## Open questions for the owner
@@ -438,3 +453,27 @@ and a picture of the replay where there is one.
 - **The scale of the clock.** One second of the wall clock is one day of
   the world (86,400). Step W7 measured the edge again: the code there
   is 2 to 3 times slower than native code, so the scale stays.
+
+- **The sources of the other vans (step W8).** A van of the line needs
+  the traces of its side (the Transit has them from the drawings of
+  Outlines and a photo of the owner), its sizes, and a side photo of a
+  dealer for the check. Found on 2026-10-31:
+  - The sizes. The Sprinter (VS30, 144 in and 170 in, high roof): the
+    page of the cargo van of Mercedes-Benz Vans Canada (length 234 and
+    274 in, height 107 in, overhangs 40 and 49 or 64 in, rear door 61 by
+    73 in). The ProMaster (2014 to 2022, 136 in and 159 in, high roof):
+    the Ram brochure of 2018, page 22 (length 213.1 and 236.1 in, width
+    80.7 in, height 99.4 in). The crew van of the Transit (148 in): the
+    columns of the cargo van in the Ford Technical Specifications of
+    2025, page 4; Ford gives no sheet for the crew van itself.
+  - Not found: the overhangs, the tracks and the tires of the ProMaster;
+    the second row and the windows of the crew van; any scaled side view
+    from a body builder guide (the guides of Mercedes-Benz, Ram and Ford
+    refuse this computer: 403 or 503); any side photo of a dealer.
+  - The drawings of Outlines (getoutlines.com) of each van exist, at
+    24 USD each, and their previews show the side.
+
+  The owner can give one of these: the PDF of each body builder guide,
+  the drawings of Outlines (or permission to buy them), or side photos
+  of the three vans. With them, W8 continues as F3 did for the Transit.
+

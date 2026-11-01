@@ -144,6 +144,7 @@ defmodule World.People do
     Assembly.new("traveler_" <> vehicle <> "_parked", m,
       root: "vehicle",
       kind: :vehicle,
+      materials: m.materials,
       sources: ["The #{m.name} of World, parked, and a person of World next to it."]
     )
     |> Assembly.add("traveler", person, at: Part.port("stand", {x, y, 0.0}, {0, 0, 1}, {1, 0, 0}), port: "ground")

@@ -170,6 +170,13 @@ defmodule World.HumanTest do
     end
   end
 
+  test "a parked vehicle keeps its colors: the white of the van, not the red of the palette" do
+    ride = Build.scene(Detail.with(:far, fn -> World.People.traveler("camper") end), level: :far)
+    parked = Build.scene(Detail.with(:far, fn -> World.People.traveler("camper", [], "parked") end), level: :far)
+    assert parked.materials[:paint] == ride.materials[:paint]
+    assert parked.materials[:paint]["color"] == [240, 241, 238]
+  end
+
   test "the parked traveler waves to the viewer and points to the front of the vehicle" do
     scene = Build.scene(Detail.with(:far, fn -> World.People.traveler("motorbike", [], "parked") end), level: :far)
     [wave, point, _blink] = scene.animations

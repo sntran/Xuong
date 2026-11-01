@@ -734,6 +734,372 @@
      "The black band on the sides and the doors from 0.44 to 0.59 m, and the arches of the wheels of 0.5 m: the render of Ram (sources of the make)."
     ]
    }
+  },
+  "mercedes_sprinter": {
+   "name": "Mercedes-Benz Sprinter (US, BM907, 2019 to 2026)",
+   "traces": {
+    "high": {
+     "top": 2.614,
+     "back": [
+      [
+       0.3,
+       "top"
+      ],
+      [
+       0.175,
+       2.58
+      ],
+      [
+       0.14,
+       2.53
+      ],
+      [
+       0.093,
+       2.44
+      ],
+      [
+       0.082,
+       2.35
+      ],
+      [
+       0.07,
+       2.25
+      ],
+      [
+       0.058,
+       2.16
+      ],
+      [
+       0.047,
+       2.02
+      ],
+      [
+       0.035,
+       1.85
+      ],
+      [
+       0.023,
+       1.65
+      ],
+      [
+       0.012,
+       1.45
+      ],
+      [
+       0.008,
+       1.0
+      ],
+      [
+       0.004,
+       0.7
+      ],
+      [
+       0.0,
+       0.48
+      ],
+      [
+       0.02,
+       0.42
+      ],
+      [
+       0.07,
+       0.385
+      ],
+      [
+       0.3,
+       0.36
+      ]
+     ],
+     "roof": [
+      [
+       0.98,
+       1.6
+      ],
+      [
+       1.074,
+       1.69
+      ],
+      [
+       1.179,
+       1.785
+      ],
+      [
+       1.26,
+       1.879
+      ],
+      [
+       1.365,
+       1.972
+      ],
+      [
+       1.459,
+       2.066
+      ],
+      [
+       1.564,
+       2.159
+      ],
+      [
+       1.669,
+       2.252
+      ],
+      [
+       1.786,
+       2.346
+      ],
+      [
+       1.914,
+       2.439
+      ],
+      [
+       2.0,
+       2.49
+      ],
+      [
+       2.1,
+       2.53
+      ],
+      [
+       2.23,
+       2.58
+      ],
+      [
+       2.45,
+       "top"
+      ]
+     ]
+    }
+   },
+   "hull": {
+    "belt": 1.4,
+    "lean": 0.08,
+    "edge": 0.12,
+    "crown": [
+     0.32,
+     0.9
+    ],
+    "nose": [
+     0.35,
+     1.8
+    ],
+    "tail": [
+     0.12,
+     4.0
+    ],
+    "sill": 0.38,
+    "arches": [
+     0.5,
+     0.5
+    ]
+   },
+   "sources": [
+    "The traces of the side: the drawing of the high roof van with a wheelbase of 144 in in the guide (Mercedes-Benz, Body and Equipment Guideline Sprinter BM907, edition 2024-9 (sent by the owner), chapter 6, the placard holders), to scale: its wheelbase (314 px for 3665 mm, 85.7 px/m) gives the front overhang 1.027 m, the back overhang 1.249 m and the length 5.94 m of the guide (1021, 1246 and 5932 mm), and the roof at 2.614 m.",
+    "Mercedes-Benz, Body and Equipment Guideline Sprinter BM907, edition 2024-9 (sent by the owner): page 300, the lengths 5932, 6967 and 7367 mm and the wheelbases 3665 and 4325 mm; page 65, 1021 mm from the front end to the front axle, 1503 mm from the front axle to the back of the B-pillar, and 726 mm from there to the top edge of the windshield.",
+    "Mercedes-Benz Vans, the cargo van page (https://www.mbvans.com/en/sprinter/cargo-van): the floor at 28 in, the side door 51 in wide, the rear door 61 in wide; the heights 100 in (standard roof) and 107 in (high roof) of the US page are higher than the drawing of the guide (2.614 m): the model has the height of the drawing."
+   ],
+   "front": [
+    [
+     0.3,
+     0.33
+    ],
+    [
+     0.08,
+     0.385
+    ],
+    [
+     0.01,
+     0.45
+    ],
+    [
+     0.0,
+     0.6
+    ],
+    [
+     0.004,
+     0.85
+    ],
+    [
+     0.012,
+     1.04
+    ],
+    [
+     0.058,
+     1.13
+    ],
+    [
+     0.117,
+     1.225
+    ],
+    [
+     0.198,
+     1.272
+    ],
+    [
+     0.292,
+     1.319
+    ],
+    [
+     0.432,
+     1.365
+    ],
+    [
+     0.595,
+     1.412
+    ],
+    [
+     0.747,
+     1.459
+    ],
+    [
+     0.864,
+     1.505
+    ],
+    [
+     0.945,
+     1.552
+    ]
+   ],
+   "front_note": "The center line of the front, from the bottom of the bumper over the hood to the base of the windshield, and the windshield and the front of the roof (traces.high.roof): traced from the drawing of the guide (sources).",
+   "windows": {
+    "side": {
+     "from": 1.43,
+     "z": [
+      1.36,
+      2.08
+     ],
+     "seams": [
+      2.8,
+      3.79
+     ],
+     "front_top": 0.18,
+     "back_top": 0.09,
+     "back_bottom": 0.3
+    },
+    "slider": {
+     "from": 1.44,
+     "front_top": 0.2
+    },
+    "rear_doors": {
+     "x": 0.86,
+     "z": [
+      1.32,
+      2.23
+     ],
+     "outer_top": 0.07,
+     "outer_bottom": 0.2
+    },
+    "sources": [
+     "A guess: the windows of the Transit (the crew van and the passenger van of the line)."
+    ]
+   },
+   "openings": {
+    "note": "x is from the front axle, z from the ground (meters).",
+    "front_door": [
+     [
+      0.3,
+      0.75
+     ],
+     [
+      0.55,
+      0.43
+     ],
+     [
+      1.45,
+      0.43
+     ],
+     [
+      1.45,
+      2.27
+     ],
+     [
+      0.68,
+      2.27
+     ],
+     [
+      0.18,
+      1.55
+     ],
+     [
+      0.25,
+      1.25
+     ]
+    ],
+    "door_window": {
+     "belt": 1.48,
+     "rise": 0.0,
+     "run": 1.0,
+     "top": 2.07
+    },
+    "sliding_door": {
+     "from": 1.55,
+     "to": 2.9,
+     "z": [
+      0.43,
+      2.3
+     ]
+    },
+    "windshield": {
+     "base": 0.9,
+     "inset": 0.11,
+     "top": 2.33
+    },
+    "rear_doors": {
+     "lamp": 0.11,
+     "bottom": 0.75,
+     "over": 0.05
+    },
+    "sources": [
+     "The front door: to 1.45 m behind the front axle (the back of the B-pillar at 1.503 m, page 65 of the guide), from 0.43 to 2.27 m, and its window from 1.48 to 2.07 m: the drawing of the guide; its front edge: by eye from the drawing.",
+     "The sliding door: from 1.55 to 2.90 m behind the front axle (an opening of 51 in, the US page), from 0.43 to 2.30 m: by eye from the drawing.",
+     "The rear doors: from the lamps (0.11 m in) to the middle, from 0.75 m to 0.05 m over the opening of 73 in from the floor at 28 in (the cargo van page of Mercedes-Benz Vans Canada; the US page): by eye from the drawing."
+    ]
+   },
+   "seats": {
+    "front": {
+     "x": 0.45,
+     "d": 1.05,
+     "height": 0.5,
+     "place_width": 0.52,
+     "track": 0.2,
+     "recline": [
+      0,
+      40
+     ]
+    },
+    "rows": [
+     {
+      "x": -0.25,
+      "d": 1.95,
+      "places": 3,
+      "place_width": 0.43
+     },
+     {
+      "x": -0.25,
+      "d": 2.85,
+      "places": 3,
+      "place_width": 0.43
+     },
+     {
+      "x": 0.0,
+      "d": 3.75,
+      "places": 4,
+      "place_width": 0.46
+     }
+    ],
+    "note": "x across from the center line, d back from the front axle, to the center of the cushion; height of the top of the cushion above its floor.",
+    "sources": [
+     "A guess: the seats and the rows of the Transit."
+    ]
+   },
+   "trim": {
+    "band": [
+     0.58,
+     0.8
+    ],
+    "sources": [
+     "The black band on the sides from 0.58 to 0.80 m: by eye from the renders of the trims of the 2026 Sprinter on the page of Mercedes-Benz Vans (screenshots of the owner)."
+    ]
+   }
   }
  },
  "models": {
@@ -862,6 +1228,71 @@
     "Ram, ProMaster brochure 2018, page 22: 250.5 by 80.7 by 99.4 in, wheelbase 159 in. The front overhang 0.879 m: from the render of Ram (the overhangs in the ratio of the render, to the length of Ram). The tracks 71.3 and 70.5 in: iSeeCars, not a maker; the tire LT225/75R16: Guide Auto (2023), not a maker."
    ],
    "quarter_end": 4.964
+  },
+  "sprinter_144_high": {
+   "make": "mercedes_sprinter",
+   "name": "Mercedes-Benz Sprinter 144 in, high roof",
+   "roof": "high",
+   "length": 5.932,
+   "width": 2.032,
+   "height": 2.614,
+   "wheelbase": 3.665,
+   "front": 1.021,
+   "track": [
+    1.72,
+    1.72
+   ],
+   "tire": "245/75R16",
+   "floor": 0.711,
+   "rear_door": 1.854,
+   "sources": [
+    "The guide of Mercedes-Benz (BM907, 2024-9): length 5932 mm, wheelbase 3665 mm, front overhang 1021 mm; the height 2.614 m from its drawing. The width 80 in: the US page of Mercedes-Benz Vans (the width of the 3500 trims). A guess: the tracks of 1.72 m and the tire 245/75R16 (no maker document)."
+   ],
+   "quarter_end": 4.391
+  },
+  "sprinter_170_high": {
+   "make": "mercedes_sprinter",
+   "name": "Mercedes-Benz Sprinter 170 in, high roof",
+   "roof": "high",
+   "length": 6.967,
+   "width": 2.032,
+   "height": 2.614,
+   "wheelbase": 4.325,
+   "front": 1.021,
+   "track": [
+    1.72,
+    1.72
+   ],
+   "tire": "245/75R16",
+   "floor": 0.711,
+   "rear_door": 1.854,
+   "sources": [
+    "The guide of Mercedes-Benz (BM907, 2024-9): length 6967 mm, wheelbase 4325 mm, front overhang 1021 mm; the height 2.614 m from its drawing. The width 80 in: the US page of Mercedes-Benz Vans (the width of the 3500 trims). A guess: the tracks of 1.72 m and the tire 245/75R16 (no maker document).",
+    "The windows of an order with windows all around end at 4.6 m behind the front axle (quarter_end, a guess), so the van stays under 50,000 triangles at near."
+   ],
+   "quarter_end": 4.6
+  },
+  "sprinter_170_ext_high": {
+   "make": "mercedes_sprinter",
+   "name": "Mercedes-Benz Sprinter 170 in extended, high roof",
+   "roof": "high",
+   "length": 7.367,
+   "width": 2.032,
+   "height": 2.614,
+   "wheelbase": 4.325,
+   "front": 1.021,
+   "track": [
+    1.72,
+    1.72
+   ],
+   "tire": "245/75R16",
+   "floor": 0.711,
+   "rear_door": 1.854,
+   "sources": [
+    "The guide of Mercedes-Benz (BM907, 2024-9): length 7367 mm, wheelbase 4325 mm, front overhang 1021 mm; the height 2.614 m from its drawing. The width 80 in: the US page of Mercedes-Benz Vans (the width of the 3500 trims). A guess: the tracks of 1.72 m and the tire 245/75R16 (no maker document).",
+    "The windows of an order with windows all around end at 4.0 m behind the front axle (quarter_end, a guess), so the van stays under the limits of triangles at near and at mid."
+   ],
+   "quarter_end": 4.0
   }
  }
 }

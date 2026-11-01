@@ -2,46 +2,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { handler, orderOf, split } from '../../handler.js';
-
-const HASH = '0123456789abcdef0123456789abcdef';
-
-// A bucket in memory, with the API of R2 that handler.js uses.
-function bucket() {
-  const items = new Map();
-  return {
-    items,
-    async get(key) {
-      if (!items.has(key)) return null;
-      const bytes = items.get(key);
-      return {
-        httpEtag: `"${key.length}-${bytes.byteLength}"`,
-        body: bytes,
-        async json() { return JSON.parse(new TextDecoder().decode(bytes)); },
-      };
-    },
-    async put(key, value) {
-      items.set(key, typeof value === 'string' ? new TextEncoder().encode(value) : new Uint8Array(value));
-    },
-  };
-}
-
-// A VM that checks an order with a blueprint "box", and counts the builds.
-function vm() {
-  const calls = [];
-  const fn = async (request, hash) => {
-    const url = new URL(request.url);
-    calls.push(url.pathname + url.search);
-    if (url.pathname === '/build') assert.equal(hash, HASH);
-    if (url.pathname === '/blueprints') return Response.json([{ name: 'box' }]);
-    const order = await request.json();
-    if (order.blueprint !== 'box') return Response.json({ errors: [{ path: 'blueprint', message: 'no' }] }, { status: 422 });
-    if (url.pathname === '/check') return Response.json({ hash: HASH, order: { ...order, full: true } });
-    if (order.joints?.bad) return Response.json({ errors: [{ path: 'joints.bad', message: 'no' }] }, { status: 422 });
-    return new Response(`${url.searchParams.get('level')} ${url.searchParams.get('file')}`);
-  };
-  fn.calls = calls;
-  return fn;
-}
+import { BLUEPRINTS, HASH, bucket, vm } from './fakes.js';
 
 const req = (path, init) => new Request(`https://world.mkfifo.com${path}`, init);
 
@@ -135,7 +96,7 @@ test('GET /m/ checks the order of the URL, then builds it', async () => {
 test('the other routes', async () => {
   const env = { ORDERS: bucket() };
   const blueprints = await handler(req('/blueprints'), env, { vm: vm(), commit: 'c1' });
-  assert.deepEqual(await blueprints.json(), [{ name: 'box' }]);
+  assert.deepEqual(await blueprints.json(), BLUEPRINTS);
   const options = await handler(req('/orders', { method: 'OPTIONS' }), env, { vm: vm(), commit: 'c1' });
   assert.equal(options.status, 204);
   assert.equal(options.headers.get('access-control-allow-methods'), 'GET, POST, OPTIONS');

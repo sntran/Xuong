@@ -28,6 +28,11 @@
 // When the VM stops (an order that needs more memory than the edge has),
 // the answer is 503 with the errors in JSON, and the next request starts
 // the VM again.
+//
+// - POST /mcp: the MCP server (mcp.js). An MCP client of another
+//   project finds the blueprints, checks an order and places it, as
+//   with POST /orders.
+import { mcp } from './mcp.js';
 
 const CACHE = 'public, max-age=300, stale-while-revalidate=86400';
 
@@ -88,6 +93,17 @@ async function check(vm, order) {
   return { status: r.status, body: await r.json() };
 }
 
+// An order of POST /orders and of the MCP server: the check, then the
+// full order into R2, and the URLs of its files.
+async function place(env, vm, origin, order) {
+  const { status, body } = await check(vm, order);
+  if (status !== 200) return { status, body };
+  await env.ORDERS.put(`orders/${body.hash}.json`, JSON.stringify(body.order), { httpMetadata: { contentType: 'application/json' } });
+  const files = Object.fromEntries(FILES.map(([ext]) => [ext.slice(1), `${origin}/o/${body.hash}${ext}`]));
+  const replay = `${origin}/replay.html?order=${body.hash}`;
+  return { status, body: { hash: body.hash, order: body.order, files, replay } };
+}
+
 // A file of a full order: from R2, else from the VM (then into R2).
 async function file(request, env, vm, commit, hash, order, [, level, kind, type]) {
   const key = `builds/${commit}/${hash}.${level}.${kind}`;
@@ -117,6 +133,15 @@ async function route(request, env, { vm, commit }) {
   const url = new URL(request.url);
   const path = url.pathname;
 
+  if (path === '/mcp') {
+    return mcp(request, {
+      commit,
+      blueprints: async () => (await vm(new Request('http://vm/blueprints'))).json(),
+      check: (order) => check(vm, order),
+      place: (order) => place(env, vm, url.origin, order),
+    });
+  }
+
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: headers({ 'access-control-max-age': '86400' }) });
 
   if (path === '/blueprints' && request.method === 'GET') {
@@ -131,12 +156,8 @@ async function route(request, env, { vm, commit }) {
     } catch {
       return errors(400, 'the body is not JSON');
     }
-    const { status, body } = await check(vm, order);
-    if (status !== 200) return json(status, body);
-    await env.ORDERS.put(`orders/${body.hash}.json`, JSON.stringify(body.order), { httpMetadata: { contentType: 'application/json' } });
-    const files = Object.fromEntries(FILES.map(([ext]) => [ext.slice(1), `${url.origin}/o/${body.hash}${ext}`]));
-    const replay = `${url.origin}/replay.html?order=${body.hash}`;
-    return json(200, { hash: body.hash, order: body.order, files, replay });
+    const { status, body } = await place(env, vm, url.origin, order);
+    return json(status, body);
   }
 
   if (request.method !== 'GET' && request.method !== 'HEAD') return errors(405, 'the method is not allowed');

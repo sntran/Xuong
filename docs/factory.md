@@ -46,6 +46,7 @@ An order is data, never code. World runs no code from an order.
 | `/o/HASH.glb`, `.mid.glb`, `.far.glb`, `.parts.json`, `.receipt.json` | The files of an order of `POST /orders`. The people of the world build the GLB at each level (`World.Run`). |
 | `/o/HASH.log.json`, `/o/HASH.replay.glb` | The log of the run of the world that built the near level (`World.Log`: one line for the clock and the yard, then one line for each event), and the model with each part in a node of its own, with the id of its task (extras `task`), for the replay. |
 | `/m/BLUEPRINT.glb?OPTION=VALUE` (and the other files) | An order in the URL: `color.ROLE=%23rrggbb` gives a color, `joint.NAME=50` a joint, `target.LIMB=X,Y,Z` the end of a limb, `A,B` a list, and `OPTION.FIELD=VALUE` a field of an object (`origin.asian=1`: give each field, because a field that is not in the URL has its default). |
+| `POST /mcp` | The MCP server: the same orders, as the tools of the Model Context Protocol (below, "The MCP server"). |
 | `/v/VERSION/...` | A copy that never changes, for a release of a game (later). |
 
 An order:
@@ -223,6 +224,41 @@ Each file has `Access-Control-Allow-Origin: *`, an `ETag`, and
 `Cache-Control: public, max-age=300, stale-while-revalidate=86400`. So a
 project gets a correction at most 5 minutes after the deploy of World,
 and it can use a copy in its cache while it gets the new file.
+
+## The MCP server
+
+`/mcp` is a server of the [Model Context
+Protocol](https://modelcontextprotocol.io) (MCP), so an MCP client of
+another project can find the blueprints and order a model. The
+transport is Streamable HTTP with no state: each `POST` is one JSON-RPC
+message, and the answer is one JSON message. There is no event stream
+and no session (`GET` and `DELETE` give 405), and no sign-in, as for
+`POST /orders`. The server knows the versions `2025-11-25`,
+`2025-06-18`, `2025-03-26` and `2024-11-05` of the protocol.
+
+| Tool | What it does |
+|---|---|
+| `list_blueprints` | The name and the description of each blueprint. |
+| `get_blueprint` | The options of one blueprint (`name`), as `GET /blueprints` gives them. |
+| `check_order` | Checks an `order` and does not keep it: the hash and the full order, or the errors. |
+| `place_order` | Checks an `order` and keeps it, as `POST /orders`: the hash, the full order, the URLs of its files and of its replay page, or the errors. |
+
+The result of a tool has the data as JSON text and as structured
+content. A wrong order is a result with `isError` and the errors, each
+with its path and its rule, so that the client can correct the order
+and try again. A VM that stops is a result with `isError` too. The
+factory builds each file at its first `GET`, as for `POST /orders`.
+
+To add the server to an MCP client, give it the URL
+`https://world.mkfifo.com/mcp` with the transport "HTTP" (or
+"Streamable HTTP"). For example, in a JSON file of servers:
+
+```json
+{"mcpServers": {"world": {"type": "http", "url": "https://world.mkfifo.com/mcp"}}}
+```
+
+`mcp.js` is the server, and `handler.js` gives it the VM and the bucket.
+`test/js/mcp.test.js` has its tests.
 
 ## The line of a van
 

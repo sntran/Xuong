@@ -147,6 +147,7 @@ const gltf = await new GLTFLoader().loadAsync('https://world.mkfifo.com/models/f
 | `POST /orders`, `/o/HASH.glb` | An order in JSON, and the files of the order. |
 | `/o/HASH.log.json`, `/replay.html?order=HASH` | The log of the people that built the order, and its replay. |
 | `/m/BLUEPRINT.glb?OPTION=VALUE` | An order in the URL, for example `/m/strut.glb?length=0.6&kind=solid`. |
+| `/mcp` | The MCP server (Streamable HTTP): the tools `list_blueprints`, `get_blueprint`, `check_order` and `place_order`. |
 
 `docs/factory.md` tells the details. An Elixir app can also add the package and call its functions:
 

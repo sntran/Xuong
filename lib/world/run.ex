@@ -37,6 +37,7 @@ defmodule World.Run do
       out: {"khoa", "wheel_truck"}
     },
     %{place: "seats", family: :seats, at: {-300, 400}, foreman: "lan", workers: ["minh"], out: {"nga", "seat_truck"}},
+    %{place: "doors", family: :doors, at: {600, 400}, foreman: "vinh", workers: ["xuan"], out: {"yen", "door_truck"}},
     %{place: "houses", family: :houses, at: {-300, -300}, foreman: "oanh", workers: ["phuc", "quang"]}
   ]
 
@@ -86,6 +87,8 @@ defmodule World.Run do
     |> Yard.road("vehicles", "customer")
     |> Yard.road("wheels", "vehicles")
     |> Yard.road("seats", "vehicles")
+    |> Yard.road("doors", "vehicles")
+    |> Yard.road("doors", "houses")
   end
 
   defp warehouse(name, at, limit, store),

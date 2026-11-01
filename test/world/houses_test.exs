@@ -122,11 +122,11 @@ defmodule World.HousesTest do
 
   describe "the doors and the windows" do
     test "a door opens to the inside, and its knob turns" do
-      door = Buildings.door_sample()
+      door = World.Doors.prehung_sample()
       roles = for {_, _, %{role: r}} <- door.nodes, r, do: r
       assert Enum.sort(roles) == [:door, :knob]
       assert counts(door)["hinge_3_5in"] == 3
-      assert Buildings.door_opening(0.9144, 2.032) |> elem(0) > 0.9144
+      assert World.Doors.prehung_opening(0.9144, 2.032) |> elem(0) > 0.9144
     end
 
     test "a casement window and a fixed window" do

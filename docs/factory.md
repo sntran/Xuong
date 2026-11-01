@@ -177,14 +177,47 @@ An order of a van:
 }
 ```
 
+The windows of a van are a list, or the name of a preset: `cargo` (no
+window behind the cab, the default), `crew` (the window of the second
+row at the left, the window of the sliding door and those of the rear
+doors), `passenger` (the windows all around). Each window of a list has
+its place (`at`: `left` or `right` in a side of the body, `slider` in
+the sliding door, `rear_doors` in the rear doors; one window at a
+place) and its numbers (`from` and `to` behind the front axle, `bottom`
+and `top` over the ground, in meters); a number that the window does not
+give is that of the model. The doors have numbers too (`doors`: `front`
+`back` and `top`, `sliding` `from`, `to` and `top`, `rear` `height`),
+and `rows` is the count of the rows of seats behind the front seats (by
+default from the preset). A crew van with a longer window at the left
+and a wider sliding door:
+
+```json
+{
+  "blueprint": "van",
+  "options": {
+    "model": "transit_148",
+    "windows": [{"at": "left", "to": 3.5}, {"at": "slider"}, {"at": "rear_doors"}],
+    "doors": {"sliding": {"to": 2.9}},
+    "rows": 1
+  }
+}
+```
+
+In the world, the doors factory makes each door to its numbers, with
+the glass of its window, and its truck brings the doors to the line of
+the van (`docs/world.md`, "The factories").
+
 The sizes of a van (`size`: `length`, `width`, `height`, in meters) are
 those of the US market by default: the sizes that the maker gives for
 the US. An order for another market gives its sizes (the Sprinter of
 Mercedes-Benz Australia: `"height": 2.331` with a standard roof, 2.62
 with a high roof). The height goes up 0.3 m and down to the height of
 the traces of the roof; the length and the width go 0.05 m each way.
-The check of a van refuses a size out of these limits, puts each item
-of the roof on the flat part of the roof, and two items do not touch.
+The check of a van refuses a size, a door or a window out of the limits
+of the model (a door stays in the body, a window in its side or its
+door), two windows at one place, and more rows of seats than the body
+has room for; it puts each item of the roof on the flat part of the
+roof, and two items do not touch.
 
 Each file has `Access-Control-Allow-Origin: *`, an `ETag`, and
 `Cache-Control: public, max-age=300, stale-while-revalidate=86400`. So a

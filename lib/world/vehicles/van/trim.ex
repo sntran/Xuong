@@ -49,7 +49,7 @@ defmodule World.Vehicles.Van.Trim do
       end
 
     Kit.part(@station, "glass_transit", :glass, shapes, [Kit.origin()],
-      sources: if(van.windows == :cargo, do: [], else: van.make["windows"]["sources"])
+      sources: if(van.glass == [], do: [], else: van.make["windows"]["sources"])
     )
   end
 
@@ -132,14 +132,12 @@ defmodule World.Vehicles.Van.Trim do
   end
 
   # The glass of the rear doors on the closed body (the far level).
-  defp rear_glass(%{windows: :cargo}), do: []
-
   defp rear_glass(van) do
     %{h: h} = van
     {r0, _, _, _} = Openings.rear(van)
     {_, d1} = Hull.span(h)
 
-    for s <- [1, -1] do
+    for s <- [1, -1], Openings.window(van, "rear_doors") do
       Hull.shell(h, r0, d1, :glass_dark,
         side: s,
         thickness: 0.008,
@@ -484,19 +482,11 @@ defmodule World.Vehicles.Van.Trim do
     )
   end
 
-  # The two front seats on their tracks, and the rows of the crew van (the
-  # first row) and of the passenger van (the rows of the make that go in
-  # the body: a seat is 0.5 m deep behind the center of its cushion, and
-  # the rear doors are 0.1 m thick).
+  # The two front seats on their tracks, and the rows of the order
+  # (`World.Vehicles.Van.Order.rows/3`).
   defp seats(asm, van) do
-    %{"front" => front, "rows" => rows, "sources" => sources} = van.make["seats"]
-
-    rows =
-      case van.windows do
-        :cargo -> []
-        :crew -> Enum.take(rows, 1)
-        :passenger -> Enum.filter(rows, &(van.f + &1["d"] + 0.5 <= van.l - 0.1))
-      end
+    %{"front" => front, "sources" => sources} = van.make["seats"]
+    rows = van.rows
 
     opts = fn data -> [place_width: data["place_width"], sources: sources] end
 

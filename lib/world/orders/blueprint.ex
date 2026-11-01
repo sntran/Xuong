@@ -31,6 +31,9 @@ defmodule World.Orders.Blueprint do
       items of a list (`max`).
     - `values`: the values of a choice.
     - `item`: the option of each item of a list (its name is not used).
+    - `presets`: the names of the presets of a list: the order can give
+      the name in place of the list (the windows `"crew"` of a van), and
+      the build makes the list of the preset.
     - `fields`: the options of an object.
     """
     defstruct name: nil,
@@ -42,6 +45,7 @@ defmodule World.Orders.Blueprint do
               values: nil,
               item: nil,
               fields: nil,
+              presets: nil,
               check: nil,
               doc: ""
   end
@@ -122,6 +126,10 @@ defmodule World.Orders.Blueprint do
       else: {:error, [{path, "must be a color #rrggbb"}]}
   end
 
+  def value(%Option{type: :list, presets: [_ | _] = presets} = o, raw, path) when is_binary(raw) do
+    if raw in presets, do: {:ok, raw}, else: value(%{o | presets: nil}, raw, path)
+  end
+
   def value(%Option{type: :list} = o, raw, path) when is_binary(raw),
     do: value(o, if(raw == "", do: [], else: String.split(raw, ",")), path)
 
@@ -174,6 +182,7 @@ defmodule World.Orders.Blueprint do
       "min" => o.min,
       "max" => o.max,
       "values" => o.values,
+      "presets" => o.presets,
       "item" => if(o.item, do: describe_option(o.item)),
       "fields" => if(o.fields, do: Enum.map(o.fields, &describe_option/1)),
       "doc" => o.doc

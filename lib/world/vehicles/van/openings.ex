@@ -83,17 +83,25 @@ defmodule World.Vehicles.Van.Openings do
      (van.m["floor"] + van.m["rear_door"] + o["over"]) / 1}
   end
 
-  @doc """
-  The window of a rear door (the passenger van): from the middle to its
-  outer edge, with its outer corners cut on the line that touches their
-  round corners.
-  """
-  def rear_window(%{windows: :cargo}, _d), do: nil
+  @doc "The window of the order at a place (`left`, `right`, `slider`, `rear_doors`), or nil."
+  def window(van, at), do: Enum.find(van.glass, &(&1["at"] == at))
 
+  @doc """
+  The window of a rear door (the window `rear_doors` of the order): from
+  the middle to its outer edge, with its outer corners cut on the line
+  that touches their round corners.
+  """
   def rear_window(van, d) do
+    case window(van, "rear_doors") do
+      nil -> nil
+      g -> rear_window(van, d, g)
+    end
+  end
+
+  defp rear_window(van, d, g) do
     {r0, _, _, _} = rear(van)
     w = van.make["windows"]["rear_doors"]
-    {xo, [z0, z1]} = {w["x"] / 1, w["z"]}
+    {xo, [z0, z1]} = {w["x"] / 1, [g["bottom"], g["top"]]}
     cut = fn r -> r * (2 - :math.sqrt(2)) end
 
     if d >= r0,
@@ -108,12 +116,12 @@ defmodule World.Vehicles.Van.Openings do
   end
 
   @doc """
-  A window in the side (the passenger van), from `d0` to `d1`, with its
-  round corners: `ft`, `fb` (at the front, the top and the bottom), `bt`,
-  `bb` (at the back).
+  A window in the side, from `d0` to `d1`, with its round corners: `ft`,
+  `fb` (at the front, the top and the bottom), `bt`, `bb` (at the back),
+  and its bottom and top (`z`).
   """
   def side_window(van, d, d0, d1, corners) do
-    [z0, z1] = van.make["windows"]["side"]["z"]
+    [z0, z1] = Map.get(corners, :z, van.make["windows"]["side"]["z"])
 
     if d >= d0 and d <= d1 do
       {lo, hi} = edges(d - d0, d1 - d, z0, z1, corners)
@@ -128,34 +136,36 @@ defmodule World.Vehicles.Van.Openings do
   end
 
   @doc """
-  The windows in the body behind the cab, at a side: `{d0, d1, corners}`.
-  The passenger van has a band of windows at each side (at the right
-  side behind the sliding door); the crew van, the window of the second
-  row at the left side.
+  The windows in the body behind the cab, at a side (1 the right, -1 the
+  left): `{d0, d1, corners}`, from the windows `right` and `left` of the
+  order. The window at the left has the round corner of the make at the
+  front top; a window to the end of the quarter, those at the back.
   """
-  def side_windows(%{windows: :cargo}, _s), do: []
-
   def side_windows(van, s) do
     w = van.make["windows"]["side"]
-    {f, back} = {van.f, van.f + van.m["quarter_end"]}
-    {front, row2} = {f + w["from"], f + hd(w["seams"])}
-    corners = %{bt: w["back_top"], bb: w["back_bottom"]}
+    qe = van.m["quarter_end"]
 
-    case {van.windows, s} do
-      {:crew, -1} -> [{front, row2, %{ft: w["front_top"]}}]
-      {:crew, 1} -> []
-      {:passenger, -1} -> [{front, back, Map.put(corners, :ft, w["front_top"])}]
-      {:passenger, 1} -> [{row2, back, corners}]
+    case window(van, if(s == 1, do: "right", else: "left")) do
+      nil ->
+        []
+
+      g ->
+        back = if g["to"] >= qe - 0.01, do: %{bt: w["back_top"], bb: w["back_bottom"]}, else: %{}
+        front = if s == -1, do: %{ft: w["front_top"]}, else: %{}
+        [{van.f + g["from"], van.f + g["to"], Map.merge(back, front) |> Map.put(:z, [g["bottom"], g["top"]])}]
     end
   end
 
-  @doc "The window of the sliding door: `{d0, d1, corners}`, or nil (the cargo van)."
-  def slider_window(%{windows: :cargo}), do: nil
-
+  @doc "The window of the sliding door (the window `slider` of the order): `{d0, d1, corners}`, or nil."
   def slider_window(van) do
-    w = van.make["windows"]["slider"]
-    {_, s1} = sliding_door_span(van)
-    {van.f + w["from"], s1 - 0.03, %{ft: w["front_top"]}}
+    case window(van, "slider") do
+      nil ->
+        nil
+
+      g ->
+        {van.f + g["from"], van.f + g["to"],
+         %{ft: van.make["windows"]["slider"]["front_top"], z: [g["bottom"], g["top"]]}}
+    end
   end
 
   # The window of the front door of the Transit (`door_window/2`): the

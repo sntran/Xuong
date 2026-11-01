@@ -96,7 +96,7 @@ defmodule World.Vehicles.Van.BodyShop do
         clip: fn _ -> [{:z_min, @cab_floor - 0.02}, {:z_max, @cab_floor}] end,
         sides: 8
       ),
-      Hull.skin(h, f1, l - 0.01, if(van.windows == :passenger, do: :dark, else: :plywood),
+      Hull.skin(h, f1, l - 0.01, if(length(van.rows) > 1, do: :dark, else: :plywood),
         sides: 8,
         clip: fn d ->
           # Between the wells of the wheels, the floor is narrower.

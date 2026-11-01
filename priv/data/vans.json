@@ -1626,9 +1626,9 @@
    "rear_door": 1.854,
    "sources": [
     "The guide of Mercedes-Benz (BM907, 2024-9): length 6967 mm, wheelbase 4325 mm, front overhang 1021 mm. The height 107 in (2.718 m): the cargo van page of Mercedes-Benz Vans US (https://www.mbvans.com/en/sprinter/cargo-van), the 2500 with rear-wheel drive. The drawing of the guide is 2.614 m high, and Mercedes-Benz Vans Australia gives 2620 mm (Sprinter Technical Data MY2022, page 11): an order for that market gives the size height 2.62. The width 80 in: the US page of Mercedes-Benz Vans (the width of the 3500 trims). A guess: the tracks of 1.72 m and the tire 245/75R16 (no maker document).",
-    "The windows of an order with windows all around end at 4.6 m behind the front axle (quarter_end, a guess), so the van stays under 50,000 triangles at near."
+    "The windows of an order with windows all around end at 4.5 m behind the front axle (quarter_end, a guess), so the van stays under the limits of triangles at near and at mid, also at its smallest size."
    ],
-   "quarter_end": 4.6
+   "quarter_end": 4.5
   },
   "sprinter_170_ext_high": {
    "make": "mercedes_sprinter",

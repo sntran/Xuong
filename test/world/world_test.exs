@@ -226,6 +226,9 @@ defmodule World.WorldTest do
       assert Places.family_of(wheel) == :wheels and Places.family_of(seat) == :seats and
                Places.family_of(part.("x")) == nil
 
+      # A door of a vehicle comes from the doors factory.
+      assert Places.family_of(%{Assembly.new("door_x", part.("panel"), root: "panel") | kind: :door}) == :doors
+
       plan = Plan.flat(van, family: :vehicles)
 
       assert Enum.map(plan.tasks, &{&1.id, &1.uses, &1.from}) == [

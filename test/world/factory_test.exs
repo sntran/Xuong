@@ -38,6 +38,11 @@ defmodule World.FactoryTest do
       assert {:error, [{"l.1", _}]} = Blueprint.value(list, ["a", "c"], "l")
       assert {:error, [{"l", "must have at most 2 items"}]} = Blueprint.value(list, ["a", "a", "a"], "l")
       assert {:error, [{"l", "must be a list"}]} = Blueprint.value(list, 3, "l")
+
+      # A list with presets takes the name of a preset in place of the list.
+      preset = %{list | presets: ["ab"]}
+      assert Blueprint.value(preset, "ab", "l") == {:ok, "ab"}
+      assert Blueprint.value(preset, "a", "l") == {:ok, ["a"]}
     end
 
     test "an object: its fields, a field that is required, a field that is not known" do
@@ -146,6 +151,29 @@ defmodule World.FactoryTest do
       assert World.Vehicles.Van.sizes("sprinter_144")["height"] == {2.328, 2.84}
     end
 
+    test "a van takes its doors, its windows and its rows from the order, in the limits of the model" do
+      van = fn o -> %{"blueprint" => "van", "options" => Map.put(o, "model", "transit_148")} end
+
+      # The preset crew, or its windows as a list with numbers.
+      assert {:ok, _} = Orders.check(van.(%{"windows" => "crew"}))
+      crew = [%{"at" => "left", "to" => 2.8}, %{"at" => "slider", "top" => 2.0}, %{"at" => "rear_doors"}]
+      assert {:ok, _} = Orders.check(van.(%{"windows" => crew, "rows" => 1}))
+      assert paths(Orders.check(van.(%{"windows" => "glass"}))) == ["options.windows.0"]
+
+      # A window at a place where it does not go, two at one place, one too short.
+      assert paths(Orders.check(van.(%{"windows" => [%{"at" => "left", "from" => 0.8}]}))) == ["options.windows.0.from"]
+      assert paths(Orders.check(van.(%{"windows" => [%{"at" => "left"}, %{"at" => "left"}]}))) == ["options.windows.1"]
+
+      assert paths(Orders.check(van.(%{"windows" => [%{"at" => "right", "from" => 3.0, "to" => 3.2}]}))) ==
+               ["options.windows.0"]
+
+      # The doors move a little; the sliding door stays before the rear wheel.
+      assert {:ok, _} = Orders.check(van.(%{"doors" => %{"sliding" => %{"from" => 1.4, "to" => 2.9}}}))
+      assert paths(Orders.check(van.(%{"doors" => %{"sliding" => %{"to" => 3.4}}}))) == ["options.doors.sliding.to"]
+      assert paths(Orders.check(van.(%{"doors" => %{"front" => %{"back" => 1.35}}}))) == ["options.doors.front.back"]
+      assert paths(Orders.check(van.(%{"rows" => 4}))) == ["options.rows"]
+    end
+
     test "a person needs one origin" do
       none = %{"african" => 0, "asian" => 0, "caucasian" => 0}
       assert paths(Orders.check(%{"blueprint" => "person", "options" => %{"origin" => none}})) == ["options.origin"]
@@ -231,7 +259,9 @@ defmodule World.FactoryTest do
           "options" => %{
             "model" => "transit_148_medium",
             "size" => %{"height" => 2.6},
-            "windows" => "crew",
+            "doors" => %{"sliding" => %{"to" => 2.9}, "rear" => %{"height" => 1.6}},
+            "windows" => [%{"at" => "left", "to" => 3.5}, %{"at" => "slider"}],
+            "rows" => 1,
             "engine_bay" => ["dc_charger"],
             "roof" => [%{"kind" => "solar", "at" => 3.8}, %{"kind" => "fan", "at" => 5.2}]
           }

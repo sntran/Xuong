@@ -464,7 +464,7 @@ defmodule World.Orders.Blueprints do
 
   # The values of the options of a van, as the atoms of `World.Vehicles.Van`.
   @van_atoms Map.new(
-               ~w(cargo crew passenger dc_charger second_alternator fan solar)a,
+               ~w(dc_charger second_alternator fan solar)a,
                &{Atom.to_string(&1), &1}
              )
 
@@ -479,11 +479,69 @@ defmodule World.Orders.Blueprints do
           values: Van.models(),
           doc: "The make, the wheelbase and the roof."
         ),
-        option("windows", :choice,
+        option("windows", :list,
           default: "cargo",
-          values: ["cargo", "crew", "passenger"],
+          presets: Van.Order.presets(),
+          max: 4,
+          item:
+            option("window", :object,
+              fields: [
+                option("at", :choice, values: Van.Order.places()),
+                option("from", :number, default: nil, min: 0.0, max: 8.0, unit: "m", doc: "Behind the front axle."),
+                option("to", :number, default: nil, min: 0.0, max: 8.0, unit: "m", doc: "Behind the front axle."),
+                option("bottom", :number, default: nil, min: 0.0, max: 3.5, unit: "m", doc: "Over the ground."),
+                option("top", :number, default: nil, min: 0.0, max: 3.5, unit: "m", doc: "Over the ground.")
+              ]
+            ),
           doc:
-            "cargo: the windows of the cab only; crew: and the windows of the second row; passenger: the windows all around."
+            "The windows behind the cab: a preset (cargo: none, the windows of the cab only; crew: the window of the second row at the left, the window of the sliding door and those of the rear doors; passenger: the windows all around) or a list. Each window has its place (at: left or right in a side of the body, slider in the sliding door, rear_doors in the rear doors; one window at a place) and its numbers; a number that the window does not give is that of the model. The doors factory makes the doors with their windows."
+        ),
+        option("rows", :integer,
+          default: nil,
+          min: 0,
+          max: 4,
+          doc:
+            "The rows of seats behind the front seats. By default: 1 for the preset crew, all that go in the body for the preset passenger, and none else."
+        ),
+        option("doors", :object,
+          default: %{},
+          fields: [
+            option("front", :object,
+              default: %{},
+              fields: [
+                option("back", :number,
+                  default: nil,
+                  min: 0.0,
+                  max: 3.0,
+                  unit: "m",
+                  doc: "Its back edge, behind the front axle."
+                ),
+                option("top", :number, default: nil, min: 1.5, max: 3.0, unit: "m", doc: "Over the ground.")
+              ]
+            ),
+            option("sliding", :object,
+              default: %{},
+              fields: [
+                option("from", :number, default: nil, min: 0.5, max: 4.0, unit: "m", doc: "Behind the front axle."),
+                option("to", :number, default: nil, min: 1.0, max: 5.0, unit: "m", doc: "Behind the front axle."),
+                option("top", :number, default: nil, min: 1.5, max: 3.5, unit: "m", doc: "Over the ground.")
+              ]
+            ),
+            option("rear", :object,
+              default: %{},
+              fields: [
+                option("height", :number,
+                  default: nil,
+                  min: 1.0,
+                  max: 2.5,
+                  unit: "m",
+                  doc: "The opening over the floor."
+                )
+              ]
+            )
+          ],
+          doc:
+            "The numbers of the doors over those of the model. The doors factory makes each door to its numbers. A door moves only a little from that of the model and stays in the body: a number out of its limits gives an error with the limits."
         ),
         option("engine_bay", :list,
           default: [],
@@ -518,7 +576,9 @@ defmodule World.Orders.Blueprints do
         Van.build(o["model"],
           name: "van",
           size: o["size"],
-          windows: Map.fetch!(@van_atoms, o["windows"]),
+          doors: o["doors"],
+          windows: o["windows"],
+          rows: o["rows"],
           engine_bay: Enum.map(o["engine_bay"], &Map.fetch!(@van_atoms, &1)),
           roof: for(%{"kind" => k, "at" => d} <- o["roof"], do: {Map.fetch!(@van_atoms, k), d})
         )
@@ -530,23 +590,16 @@ defmodule World.Orders.Blueprints do
     }
   end
 
-  # The sizes are in the limits of the model; each item on the roof is on
-  # its flat part, and two items do not touch.
+  # The sizes, the doors, the windows and the rows are in the limits of
+  # the model; each item on the roof is on its flat part, and two items
+  # do not touch.
   defp van_check(o) do
-    limits = Van.sizes(o["model"])
-
-    sizes =
-      for {k, v} <- Enum.sort(o["size"]),
-          v != nil,
-          {min, max} = limits[k],
-          v < min or v > max,
-          do: {"options.size.#{k}", "must be from #{min} to #{max} m for the model #{o["model"]}"}
-
-    if sizes == [], do: roof_check(o), else: sizes
+    errors = Van.check(o["model"], Map.take(o, ["size", "doors", "windows", "rows"]))
+    if errors == [], do: roof_check(o), else: errors
   end
 
   defp roof_check(o) do
-    {d0, d1} = Van.roof_span(o["model"], o["size"])
+    {d0, d1} = Van.roof_span(o["model"], %{"size" => o["size"]})
 
     spans =
       for {%{"kind" => k, "at" => d}, i} <- Enum.with_index(o["roof"]) do

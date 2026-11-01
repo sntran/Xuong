@@ -31,7 +31,7 @@ defmodule World.Vehicles.Van do
   """
   alias World.{Assembly, Frame}
   alias World.Vehicles.{Hull, Wheels}
-  alias World.Vehicles.Van.{BodyShop, Chassis, Closures, Trim, Upfit}
+  alias World.Vehicles.Van.{BodyShop, Chassis, Closures, Order, Trim, Upfit}
 
   @external_resource data_path = Path.join([__DIR__, "..", "..", "..", "priv", "data", "vans.json"])
   @data data_path |> File.read!() |> JSON.decode!()
@@ -49,13 +49,13 @@ defmodule World.Vehicles.Van do
   @doc """
   The data of a model, with its make. The `openings` of a model (a
   standard roof has lower doors) replace those of its make: each key of
-  a map, or the full value of the key. The sizes of an order (`length`,
-  `width`, `height`, in meters; nil for the size of the model) replace
-  those of the model.
+  a map, or the full value of the key. An order (a map) replaces more:
+  its `size` (`length`, `width`, `height`, in meters; nil for the size
+  of the model) and its `doors` (`World.Vehicles.Van.Order`).
   """
-  def model(name, size \\ %{}) do
+  def model(name, order \\ %{}) do
     m = Map.fetch!(@data["models"], name)
-    m = for {k, v} <- size, Map.has_key?(@sizes, k), v != nil, into: m, do: {k, v / 1}
+    m = for {k, v} <- order["size"] || %{}, Map.has_key?(@sizes, k), v != nil, into: m, do: {k, v / 1}
     own = Map.get(m, "openings", %{})
 
     make =
@@ -65,7 +65,8 @@ defmodule World.Vehicles.Van do
         &Map.merge(&1, own, fn _k, a, b -> merge(a, b) end)
       )
 
-    Map.put(m, "make_data", make)
+    m = Map.put(m, "make_data", make)
+    if Map.has_key?(order, "doors"), do: Order.put_doors(m, order["doors"]), else: m
   end
 
   defp merge(%{} = a, %{} = b), do: Map.merge(a, b)
@@ -89,8 +90,8 @@ defmodule World.Vehicles.Van do
   end
 
   @doc "The hull of a model, with the sizes of an order (`model/2`)."
-  def hull(name, size \\ %{}) do
-    m = model(name, size)
+  def hull(name, order \\ %{}) do
+    m = model(name, order)
     make = m["make_data"]
     t = make["traces"][m["roof"]]
     h = make["hull"]
@@ -135,8 +136,8 @@ defmodule World.Vehicles.Van do
   The flat part of the roof of a model, with the sizes of an order: the
   first and the last `d` (from the front) where an item can be.
   """
-  def roof_span(name, size \\ %{}) do
-    h = hull(name, size)
+  def roof_span(name, order \\ %{}) do
+    h = hull(name, order)
     {d0, d1} = Hull.span(h)
     flat = Enum.find(Hull.stations(h, d0, d1, 0.01), &(Hull.z_high(h, &1) >= h.top - 1.0e-6))
     {flat, h.length - Hull.back(h, h.top)}
@@ -144,11 +145,13 @@ defmodule World.Vehicles.Van do
 
   @doc """
   A van from the line. The options: `name` of the assembly, `windows`
-  (`:cargo`, the default: the windows of the cab only; `:crew`: the
-  windows of the second row too, and its seats; `:passenger`: the
-  windows all around, and its rows of seats), `engine_bay` (the items of
-  DIY in the bay: `:dc_charger`, `:second_alternator`), `roof` (the items
-  on the roof: `{:fan, d}` and `{:solar, d}`, at `d` from the front),
+  (a preset: `cargo`, the default, the windows of the cab only; `crew`:
+  the windows of the second row too; `passenger`: the windows all
+  around; or a list of windows, `World.Vehicles.Van.Order`), `rows` (the
+  rows of seats behind the front seats; by default from the preset),
+  `doors` (the numbers of the doors), `engine_bay` (the items of DIY in
+  the bay: `:dc_charger`, `:second_alternator`), `roof` (the items on
+  the roof: `{:fan, d}` and `{:solar, d}`, at `d` from the front),
   `size` (the `length`, the `width` and the `height` of the van, over
   those of the model: `sizes/1`).
   """
@@ -169,12 +172,42 @@ defmodule World.Vehicles.Van do
     |> Upfit.fit(van, Keyword.get(opts, :roof, []))
   end
 
-  # The order on the line: the model, its make, its hull and its windows.
+  @doc """
+  The errors of an order of a model: its sizes (`sizes/1`), its doors, its
+  windows and its rows (`World.Vehicles.Van.Order.check/4`). The order
+  is a map of `size`, `doors`, `windows` and `rows`.
+  """
+  def check(name, order) do
+    limits = sizes(name)
+
+    sizes =
+      for {k, v} <- Enum.sort(order["size"] || %{}),
+          v != nil,
+          {min, max} = limits[k],
+          v < min or v > max,
+          do: {"options.size.#{k}", "must be from #{min} to #{max} m for the model #{name}"}
+
+    if sizes == [],
+      do: Order.check(model(name, Map.take(order, ["size"])), order["doors"], order["windows"], order["rows"]),
+      else: sizes
+  end
+
+  # The order on the line: the model with the sizes and the doors of the
+  # order, its make, its hull, its windows and its rows of seats.
   defp order(model_name, opts) do
-    size = Keyword.get(opts, :size, %{})
-    m = model(model_name, size)
-    h = hull(model_name, size)
+    order = %{"size" => Keyword.get(opts, :size, %{}), "doors" => Keyword.get(opts, :doors, %{})}
+    m = model(model_name, order)
+    h = hull(model_name, order)
     windows = Keyword.get(opts, :windows, :cargo)
-    %{m: m, make: m["make_data"], h: h, l: h.length, f: m["front"] / 1, windows: windows}
+
+    %{
+      m: m,
+      make: m["make_data"],
+      h: h,
+      l: h.length,
+      f: m["front"] / 1,
+      glass: Order.windows(m, windows),
+      rows: Order.rows(m, windows, Keyword.get(opts, :rows))
+    }
   end
 end

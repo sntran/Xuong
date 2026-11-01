@@ -170,14 +170,21 @@ An order of a van:
     "model": "transit_148_medium",
     "windows": "passenger",
     "engine_bay": ["dc_charger"],
-    "roof": [{"kind": "solar", "at": 3.8}, {"kind": "fan", "at": 5.2}]
+    "roof": [{"kind": "solar", "at": 3.8}, {"kind": "fan", "at": 5.2}],
+    "size": {"height": 2.6}
   },
   "colors": {"paint": "#1d3b5a"}
 }
 ```
 
-The check of a van puts each item of the roof on the flat part of the
-roof, and two items do not touch.
+The sizes of a van (`size`: `length`, `width`, `height`, in meters) are
+those of the US market by default: the sizes that the maker gives for
+the US. An order for another market gives its sizes (the Sprinter of
+Mercedes-Benz Australia: `"height": 2.331` with a standard roof, 2.62
+with a high roof). The height goes up 0.3 m and down to the height of
+the traces of the roof; the length and the width go 0.05 m each way.
+The check of a van refuses a size out of these limits, puts each item
+of the roof on the flat part of the roof, and two items do not touch.
 
 Each file has `Access-Control-Allow-Origin: *`, an `ETag`, and
 `Cache-Control: public, max-age=300, stale-while-revalidate=86400`. So a

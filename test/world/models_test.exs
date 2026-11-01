@@ -74,6 +74,21 @@ defmodule World.ModelsTest do
       joints = for {name, _, %{kind: kind}} <- van.nodes, into: %{}, do: {name, kind}
       assert %{"sliding_door" => :slide, "rear_door_right" => :hinge, "rear_door_left" => :hinge} = joints
     end
+
+    test "the van #{name} at its smallest and its largest sizes" do
+      limits = World.Vehicles.Van.sizes(@name)
+
+      for pick <- [&elem(&1, 0), &elem(&1, 1)], level <- [:near, :mid] do
+        size = Map.new(limits, fn {k, v} -> {k, pick.(v)} end)
+        passenger = fn -> World.Vehicles.Van.build(@name, size: size, windows: :passenger) end
+        scene = Build.scene(Detail.with(level, passenger), level: level)
+        tris = Scene.triangles(scene)
+        assert tris <= @limits[level], "#{@name} #{inspect(size)} has #{tris} triangles at #{level}"
+
+        [_, sl, sh] = scene.extras["size"]
+        assert abs(sl - size["length"]) <= 0.06 and abs(sh - size["height"]) <= 0.05, inspect(scene.extras["size"])
+      end
+    end
   end
 
   test "the hull of a van: its span, its sections and its back" do

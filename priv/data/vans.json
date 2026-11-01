@@ -631,7 +631,7 @@
    "sources": [
     "The traces of the side: the 2026 ProMaster 159 in, high roof, from its render on the side on the cargo page of Ram (sent by the owner on 2026-11-01), the length (236.1 in) and the height (99.4 in) of the 2018 Ram ProMaster brochure as the scales (207.6 px/m along, 210.7 px/m up). The render has a little perspective: the wheelbase in it is 2.8% too long, so the d of a point is from the nearer end (the front or the back), not from the axles.",
     "The traces of the standard roof: the 2026 ProMaster 136 in, standard roof, from its render on the side on the cargo page of Ram (sent by the owner on 2026-11-01). The render of Ram has the camera of the render of the high roof: with its scales (207.5 px/m along, 210.8 px/m up), the van is 5.413 m long, the length of Ram, and the windshield is on that of the high roof to 0.02 m. The roof is flat at 2.18 m; the antenna on the roof is left out.",
-    "Ram, ProMaster brochure 2018, page 22 (the same body since 2014): the lengths 195.4, 213.1, 236.1 and 250.5 in, the width 80.7 in with no mirrors, the height 88.7 in (standard roof) and 99.4 in (high roof), the cargo length 105.1, 122.8, 145.9 and 160.2 in, the side door 42.3 by 58.5 in (118 in), 49.2 by 58.5 in (136 in, standard roof) and 49.2 by 69.0 in (high roof), the rear doors 61.5 by 59.8 in (standard roof) and 61.5 by 70.5 in (high roof).",
+    "Ram, ProMaster brochure 2018, page 22 (the same body since 2014): the lengths 195.4, 213.1, 236.1 and 250.5 in, the width 80.7 in with no mirrors, the height 88.7 in (standard roof) and 99.4 in (high roof) (the models have the heights of the 2026 guide of Ram), the cargo length 105.1, 122.8, 145.9 and 160.2 in, the side door 42.3 by 58.5 in (118 in), 49.2 by 58.5 in (136 in, standard roof) and 49.2 by 69.0 in (high roof), the rear doors 61.5 by 59.8 in (standard roof) and 61.5 by 70.5 in (high roof).",
     "Ram, the cargo page of the 2023 ProMaster (https://www.ram.com/bo/ram-promaster/cargo.html, and the screenshots of the owner on 2026-11-01): the floor at 21 in, 56 in between the wheel wells, the cargo width 6 ft 3 in, the cargo heights 5 ft 6 in (standard roof), 6 ft 5 in (high roof) and 7 ft 2 in (super high roof), the cargo lengths 8, 10, 12 and 13 ft.",
     "The sill at 0.38 m, as the Transit: the black band at the bottom of the side is from 0.44 to 0.59 m in the render of Ram, and the trim of the line (the trim of the Transit) has its black edge under 0.41 m."
    ],
@@ -1271,7 +1271,7 @@
      "to": 2.9,
      "z": [
       0.43,
-      2.5
+      2.54
      ]
     },
     "windshield": {
@@ -1286,7 +1286,7 @@
     },
     "sources": [
      "The front door: to 1.45 m behind the front axle (the back of the B-pillar at 1.503 m, page 65 of the guide), from 0.43 to 2.27 m, and its window from 1.48 to 2.07 m: the drawing of the guide; its front edge: by eye from the drawing.",
-     "The sliding door: from 1.55 to 2.90 m behind the front axle (an opening of 51 in, the US page), from 0.43 m: by eye from the drawing of the guide. Its top: the US page gives an opening 72 in (high roof) and 60 in (standard roof) high from the floor at 28 in, to 2.54 m and 2.24 m; the vector drawings of Mercedes-Benz Vans Australia (Sprinter Technical Data MY2022, page 39) have the panel to 2.57 m and 2.30 m. The model has 2.30 m (standard roof) and 2.50 m (high roof): 2.50 m is under the round edge of the roof, 0.04 m lower than the opening, so the vans of 170 in stay under 12,000 triangles at mid.",
+     "The sliding door: from 1.55 to 2.90 m behind the front axle (an opening of 51 in, the US page), from 0.43 m: by eye from the drawing of the guide. Its top: the US page gives an opening 72 in (high roof) and 60 in (standard roof) high from the floor at 28 in, to 2.54 m and 2.24 m; the vector drawings of Mercedes-Benz Vans Australia (Sprinter Technical Data MY2022, page 39) have the panel to 2.57 m and 2.30 m. The model has 2.54 m (high roof) and 2.30 m (standard roof), and the door stays under the round edge of the roof (a lower van of an order).",
      "The rear doors: from the lamps (0.11 m in) to the middle, from 0.75 m to 0.05 m over the opening of 73 in from the floor at 28 in (the cargo van page of Mercedes-Benz Vans Canada; the US page): by eye from the drawing."
     ]
    },
@@ -1407,7 +1407,7 @@
    "name": "Ram ProMaster 118 in, standard roof",
    "roof": "standard",
    "width": 2.05,
-   "height": 2.253,
+   "height": 2.329,
    "front": 0.879,
    "track": [
     1.811,
@@ -1419,7 +1419,7 @@
    "length": 4.963,
    "wheelbase": 2.997,
    "sources": [
-    "Ram, ProMaster brochure 2018, page 22: 195.4 by 80.7 by 88.7 in, wheelbase 118 in; the rear doors 61.5 by 59.8 in. The side door is 42.3 in wide, 6.9 in less than that of the 136 in: its panel ends at 2.49 m behind the front axle, before the arch of the rear wheel (the render of Ram of the 118 in, with its wheelbase as the scale, sent by the owner on 2026-11-01). The side door is 10.5 in lower than that of the high roof (58.5 in against 69.0 in), so its panel goes to 2.09 m. The front overhang, the tracks and the tire: as the high roof."
+    "The height 91.7 in (2.329 m): Ram, 2026 ProMaster Fleet Buyer's Guide, page 1 (https://www.stellantisfleet.com/content/dam/fca-fleet/na/fleet/en_us/shopping-tools/brochures-literature/docs/buyers-guide/2026/26DOMMOP_FBG_ProMaster.pdf); the 2018 brochure gives 88.7 in, and the render of Ram is lower to the top of its roof: an order can give another height. Ram, ProMaster brochure 2018, page 22: 195.4 by 80.7 in, wheelbase 118 in; the rear doors 61.5 by 59.8 in. The side door is 42.3 in wide, 6.9 in less than that of the 136 in: its panel ends at 2.49 m behind the front axle, before the arch of the rear wheel (the render of Ram of the 118 in, with its wheelbase as the scale, sent by the owner on 2026-11-01). The side door is 10.5 in lower than that of the high roof (58.5 in against 69.0 in), so its panel goes to 2.09 m. The front overhang, the tracks and the tire: as the high roof."
    ],
    "quarter_end": 3.564,
    "openings": {
@@ -1437,7 +1437,7 @@
    "name": "Ram ProMaster 136 in, standard roof",
    "roof": "standard",
    "width": 2.05,
-   "height": 2.253,
+   "height": 2.362,
    "front": 0.879,
    "track": [
     1.811,
@@ -1449,7 +1449,7 @@
    "length": 5.413,
    "wheelbase": 3.454,
    "sources": [
-    "Ram, ProMaster brochure 2018, page 22: 213.1 by 80.7 by 88.7 in, wheelbase 136 in; the rear doors 61.5 by 59.8 in. The side door is 10.5 in lower than that of the high roof (58.5 in against 69.0 in), so its panel goes to 2.09 m. The front overhang, the tracks and the tire: as the high roof."
+    "The height 93 in (2.362 m): Ram, 2026 ProMaster Fleet Buyer's Guide, page 1 (https://www.stellantisfleet.com/content/dam/fca-fleet/na/fleet/en_us/shopping-tools/brochures-literature/docs/buyers-guide/2026/26DOMMOP_FBG_ProMaster.pdf); the 2018 brochure gives 88.7 in, and the render of Ram is lower to the top of its roof: an order can give another height. Ram, ProMaster brochure 2018, page 22: 213.1 by 80.7 in, wheelbase 136 in; the rear doors 61.5 by 59.8 in. The side door is 10.5 in lower than that of the high roof (58.5 in against 69.0 in), so its panel goes to 2.09 m. The front overhang, the tracks and the tire: as the high roof."
    ],
    "quarter_end": 4.014,
    "openings": {
@@ -1466,7 +1466,7 @@
    "name": "Ram ProMaster 136 in, high roof",
    "roof": "high",
    "width": 2.05,
-   "height": 2.525,
+   "height": 2.631,
    "front": 0.879,
    "track": [
     1.811,
@@ -1478,7 +1478,7 @@
    "length": 5.413,
    "wheelbase": 3.454,
    "sources": [
-    "Ram, ProMaster brochure 2018, page 22: 213.1 by 80.7 by 99.4 in, wheelbase 136 in. The front overhang 0.879 m: from the render of Ram (the overhangs in the ratio of the render, to the length of Ram). The tracks 71.3 and 70.5 in: iSeeCars, not a maker; the tire LT225/75R16: Guide Auto (2023), not a maker."
+    "The height 103.6 in (2.631 m): Ram, 2026 ProMaster Fleet Buyer's Guide, page 1 (https://www.stellantisfleet.com/content/dam/fca-fleet/na/fleet/en_us/shopping-tools/brochures-literature/docs/buyers-guide/2026/26DOMMOP_FBG_ProMaster.pdf); the 2018 brochure gives 99.4 in, and the render of Ram is lower to the top of its roof: an order can give another height. Ram, ProMaster brochure 2018, page 22: 213.1 by 80.7 in, wheelbase 136 in. The front overhang 0.879 m: from the render of Ram (the overhangs in the ratio of the render, to the length of Ram). The tracks 71.3 and 70.5 in: iSeeCars, not a maker; the tire LT225/75R16: Guide Auto (2023), not a maker."
    ],
    "quarter_end": 4.014
   },
@@ -1487,7 +1487,7 @@
    "name": "Ram ProMaster 159 in, high roof",
    "roof": "high",
    "width": 2.05,
-   "height": 2.525,
+   "height": 2.593,
    "front": 0.879,
    "track": [
     1.811,
@@ -1499,7 +1499,7 @@
    "length": 5.997,
    "wheelbase": 4.039,
    "sources": [
-    "Ram, ProMaster brochure 2018, page 22: 236.1 by 80.7 by 99.4 in, wheelbase 159 in. The front overhang 0.879 m: from the render of Ram (the overhangs in the ratio of the render, to the length of Ram). The tracks 71.3 and 70.5 in: iSeeCars, not a maker; the tire LT225/75R16: Guide Auto (2023), not a maker."
+    "The height 102.1 in (2.593 m): Ram, 2026 ProMaster Fleet Buyer's Guide, page 1 (https://www.stellantisfleet.com/content/dam/fca-fleet/na/fleet/en_us/shopping-tools/brochures-literature/docs/buyers-guide/2026/26DOMMOP_FBG_ProMaster.pdf); the 2018 brochure gives 99.4 in, and the render of Ram is lower to the top of its roof: an order can give another height. Ram, ProMaster brochure 2018, page 22: 236.1 by 80.7 in, wheelbase 159 in. The front overhang 0.879 m: from the render of Ram (the overhangs in the ratio of the render, to the length of Ram). The tracks 71.3 and 70.5 in: iSeeCars, not a maker; the tire LT225/75R16: Guide Auto (2023), not a maker."
    ],
    "quarter_end": 4.598
   },
@@ -1508,7 +1508,7 @@
    "name": "Ram ProMaster 159 in extended, high roof",
    "roof": "high",
    "width": 2.05,
-   "height": 2.525,
+   "height": 2.604,
    "front": 0.879,
    "track": [
     1.811,
@@ -1520,7 +1520,7 @@
    "length": 6.363,
    "wheelbase": 4.039,
    "sources": [
-    "Ram, ProMaster brochure 2018, page 22: 250.5 by 80.7 by 99.4 in, wheelbase 159 in. The front overhang 0.879 m: from the render of Ram (the overhangs in the ratio of the render, to the length of Ram). The tracks 71.3 and 70.5 in: iSeeCars, not a maker; the tire LT225/75R16: Guide Auto (2023), not a maker."
+    "The height 102.5 in (2.604 m): Ram, 2026 ProMaster Fleet Buyer's Guide, page 1 (https://www.stellantisfleet.com/content/dam/fca-fleet/na/fleet/en_us/shopping-tools/brochures-literature/docs/buyers-guide/2026/26DOMMOP_FBG_ProMaster.pdf); the 2018 brochure gives 99.4 in, and the render of Ram is lower to the top of its roof: an order can give another height. Ram, ProMaster brochure 2018, page 22: 250.5 by 80.7 in, wheelbase 159 in. The front overhang 0.879 m: from the render of Ram (the overhangs in the ratio of the render, to the length of Ram). The tracks 71.3 and 70.5 in: iSeeCars, not a maker; the tire LT225/75R16: Guide Auto (2023), not a maker."
    ],
    "quarter_end": 4.964
   },
@@ -1530,7 +1530,7 @@
    "roof": "standard",
    "length": 5.932,
    "width": 2.032,
-   "height": 2.331,
+   "height": 2.54,
    "wheelbase": 3.665,
    "front": 1.021,
    "track": [
@@ -1541,7 +1541,7 @@
    "floor": 0.711,
    "rear_door": 1.549,
    "sources": [
-    "The guide of Mercedes-Benz (BM907, 2024-9): length 5932 mm, wheelbase 3665 mm, front overhang 1021 mm. The height 2331 mm: Mercedes-Benz Vans Australia, Sprinter Technical Data MY2022, page 11, the panel van of 3.55 t (its high roof, 2620 mm, is the height of page 300 of the guide). The rear door 61 in high: the US page of Mercedes-Benz Vans. The width, the tracks and the tire: as the high roof.",
+    "The guide of Mercedes-Benz (BM907, 2024-9): length 5932 mm, wheelbase 3665 mm, front overhang 1021 mm. The height 100 in (2.54 m): the cargo van page of Mercedes-Benz Vans US (https://www.mbvans.com/en/sprinter/cargo-van), the 2500 with rear-wheel drive. Mercedes-Benz Vans Australia gives 2331 mm (Sprinter Technical Data MY2022, page 11, the panel van of 3.55 t), as its drawings: an order for that market gives the size height 2.331. The rear door 61 in high: the US page of Mercedes-Benz Vans. The width, the tracks and the tire: as the high roof.",
     "The top of the windshield at 2.17 m: the vector drawing of page 39 (Mercedes-Benz Vans Australia). The top of the front door at 2.20 m, under the edge of the roof: a guess (the drawing of page 17 gives 2.23 m, to 0.03 m)."
    ],
    "quarter_end": 4.391,
@@ -1593,7 +1593,7 @@
    "roof": "high",
    "length": 5.932,
    "width": 2.032,
-   "height": 2.614,
+   "height": 2.718,
    "wheelbase": 3.665,
    "front": 1.021,
    "track": [
@@ -1604,7 +1604,7 @@
    "floor": 0.711,
    "rear_door": 1.854,
    "sources": [
-    "The guide of Mercedes-Benz (BM907, 2024-9): length 5932 mm, wheelbase 3665 mm, front overhang 1021 mm; the height 2.614 m from its drawing. The width 80 in: the US page of Mercedes-Benz Vans (the width of the 3500 trims). A guess: the tracks of 1.72 m and the tire 245/75R16 (no maker document)."
+    "The guide of Mercedes-Benz (BM907, 2024-9): length 5932 mm, wheelbase 3665 mm, front overhang 1021 mm. The height 107 in (2.718 m): the cargo van page of Mercedes-Benz Vans US (https://www.mbvans.com/en/sprinter/cargo-van), the 2500 with rear-wheel drive. The drawing of the guide is 2.614 m high, and Mercedes-Benz Vans Australia gives 2620 mm (Sprinter Technical Data MY2022, page 11): an order for that market gives the size height 2.62. The width 80 in: the US page of Mercedes-Benz Vans (the width of the 3500 trims). A guess: the tracks of 1.72 m and the tire 245/75R16 (no maker document)."
    ],
    "quarter_end": 4.391
   },
@@ -1614,7 +1614,7 @@
    "roof": "high",
    "length": 6.967,
    "width": 2.032,
-   "height": 2.614,
+   "height": 2.718,
    "wheelbase": 4.325,
    "front": 1.021,
    "track": [
@@ -1625,10 +1625,10 @@
    "floor": 0.711,
    "rear_door": 1.854,
    "sources": [
-    "The guide of Mercedes-Benz (BM907, 2024-9): length 6967 mm, wheelbase 4325 mm, front overhang 1021 mm; the height 2.614 m from its drawing. The width 80 in: the US page of Mercedes-Benz Vans (the width of the 3500 trims). A guess: the tracks of 1.72 m and the tire 245/75R16 (no maker document).",
-    "The windows of an order with windows all around end at 4.5 m behind the front axle (quarter_end, a guess), so the van stays under the limits of triangles at near and at mid."
+    "The guide of Mercedes-Benz (BM907, 2024-9): length 6967 mm, wheelbase 4325 mm, front overhang 1021 mm. The height 107 in (2.718 m): the cargo van page of Mercedes-Benz Vans US (https://www.mbvans.com/en/sprinter/cargo-van), the 2500 with rear-wheel drive. The drawing of the guide is 2.614 m high, and Mercedes-Benz Vans Australia gives 2620 mm (Sprinter Technical Data MY2022, page 11): an order for that market gives the size height 2.62. The width 80 in: the US page of Mercedes-Benz Vans (the width of the 3500 trims). A guess: the tracks of 1.72 m and the tire 245/75R16 (no maker document).",
+    "The windows of an order with windows all around end at 4.6 m behind the front axle (quarter_end, a guess), so the van stays under 50,000 triangles at near."
    ],
-   "quarter_end": 4.5
+   "quarter_end": 4.6
   },
   "sprinter_170_ext_high": {
    "make": "mercedes_sprinter",
@@ -1636,7 +1636,7 @@
    "roof": "high",
    "length": 7.367,
    "width": 2.032,
-   "height": 2.614,
+   "height": 2.718,
    "wheelbase": 4.325,
    "front": 1.021,
    "track": [
@@ -1647,7 +1647,7 @@
    "floor": 0.711,
    "rear_door": 1.854,
    "sources": [
-    "The guide of Mercedes-Benz (BM907, 2024-9): length 7367 mm, wheelbase 4325 mm, front overhang 1021 mm; the height 2.614 m from its drawing. The width 80 in: the US page of Mercedes-Benz Vans (the width of the 3500 trims). A guess: the tracks of 1.72 m and the tire 245/75R16 (no maker document).",
+    "The guide of Mercedes-Benz (BM907, 2024-9): length 7367 mm, wheelbase 4325 mm, front overhang 1021 mm. The height 107 in (2.718 m): the cargo van page of Mercedes-Benz Vans US (https://www.mbvans.com/en/sprinter/cargo-van), the 2500 with rear-wheel drive. The drawing of the guide is 2.614 m high, and Mercedes-Benz Vans Australia gives 2620 mm (Sprinter Technical Data MY2022, page 11): an order for that market gives the size height 2.62. The width 80 in: the US page of Mercedes-Benz Vans (the width of the 3500 trims). A guess: the tracks of 1.72 m and the tire 245/75R16 (no maker document).",
     "The windows of an order with windows all around end at 4.0 m behind the front axle (quarter_end, a guess), so the van stays under the limits of triangles at near and at mid."
    ],
    "quarter_end": 4.0

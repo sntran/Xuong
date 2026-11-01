@@ -42,13 +42,20 @@ defmodule World.Vehicles.Van do
   @doc "The names of the models of vans."
   def models, do: @data["models"] |> Map.keys() |> Enum.sort()
 
+  # The sizes that an order can give, and how far each can go from the
+  # size of the model (the height: down only to the traces, see `sizes/1`).
+  @sizes %{"length" => 0.05, "width" => 0.05, "height" => 0.3}
+
   @doc """
   The data of a model, with its make. The `openings` of a model (a
   standard roof has lower doors) replace those of its make: each key of
-  a map, or the full value of the key.
+  a map, or the full value of the key. The sizes of an order (`length`,
+  `width`, `height`, in meters; nil for the size of the model) replace
+  those of the model.
   """
-  def model(name) do
+  def model(name, size \\ %{}) do
     m = Map.fetch!(@data["models"], name)
+    m = for {k, v} <- size, Map.has_key?(@sizes, k), v != nil, into: m, do: {k, v / 1}
     own = Map.get(m, "openings", %{})
 
     make =
@@ -64,9 +71,26 @@ defmodule World.Vehicles.Van do
   defp merge(%{} = a, %{} = b), do: Map.merge(a, b)
   defp merge(_a, b), do: b
 
-  @doc "The hull of a model."
-  def hull(name) do
+  @doc """
+  The sizes that an order can give to a model: `{min, max}` of its
+  `length`, `width` and `height`, in meters. The default of each is the
+  size of the model (the size of the US market). The height goes down
+  only to the top of its traces (less 0.01 m): under it, the shape of
+  the roof is not known.
+  """
+  def sizes(name) do
     m = model(name)
+    top = m["make_data"]["traces"][m["roof"]]["top"]
+
+    Map.new(@sizes, fn
+      {"height", d} -> {"height", {Float.round(min(top - 0.01, m["height"]), 3), Float.round(m["height"] + d, 3)}}
+      {k, d} -> {k, {Float.round(m[k] - d, 3), Float.round(m[k] + d, 3)}}
+    end)
+  end
+
+  @doc "The hull of a model, with the sizes of an order (`model/2`)."
+  def hull(name, size \\ %{}) do
+    m = model(name, size)
     make = m["make_data"]
     t = make["traces"][m["roof"]]
     h = make["hull"]
@@ -108,11 +132,11 @@ defmodule World.Vehicles.Van do
   def roof_item(kind), do: Map.fetch!(@roof_items, kind)
 
   @doc """
-  The flat part of the roof of a model: the first and the last `d` (from
-  the front) where an item can be.
+  The flat part of the roof of a model, with the sizes of an order: the
+  first and the last `d` (from the front) where an item can be.
   """
-  def roof_span(name) do
-    h = hull(name)
+  def roof_span(name, size \\ %{}) do
+    h = hull(name, size)
     {d0, d1} = Hull.span(h)
     flat = Enum.find(Hull.stations(h, d0, d1, 0.01), &(Hull.z_high(h, &1) >= h.top - 1.0e-6))
     {flat, h.length - Hull.back(h, h.top)}
@@ -124,7 +148,9 @@ defmodule World.Vehicles.Van do
   windows of the second row too, and its seats; `:passenger`: the
   windows all around, and its rows of seats), `engine_bay` (the items of
   DIY in the bay: `:dc_charger`, `:second_alternator`), `roof` (the items
-  on the roof: `{:fan, d}` and `{:solar, d}`, at `d` from the front).
+  on the roof: `{:fan, d}` and `{:solar, d}`, at `d` from the front),
+  `size` (the `length`, the `width` and the `height` of the van, over
+  those of the model: `sizes/1`).
   """
   def build(model_name, opts \\ []) do
     van = order(model_name, opts)
@@ -145,8 +171,9 @@ defmodule World.Vehicles.Van do
 
   # The order on the line: the model, its make, its hull and its windows.
   defp order(model_name, opts) do
-    m = model(model_name)
-    h = hull(model_name)
+    size = Keyword.get(opts, :size, %{})
+    m = model(model_name, size)
+    h = hull(model_name, size)
     windows = Keyword.get(opts, :windows, :cargo)
     %{m: m, make: m["make_data"], h: h, l: h.length, f: m["front"] / 1, windows: windows}
   end

@@ -136,6 +136,16 @@ defmodule World.FactoryTest do
       assert paths(Orders.check(roof.([solar.(3.75), fan.(4.8)]))) == ["options.roof.1"]
     end
 
+    test "a van takes its sizes from the order, near those of the model" do
+      size = fn s -> %{"blueprint" => "van", "options" => %{"model" => "sprinter_144", "size" => s}} end
+
+      # The height of Mercedes-Benz Australia, under the height of the US page.
+      assert {:ok, _} = Orders.check(size.(%{"height" => 2.331}))
+      assert paths(Orders.check(size.(%{"height" => 2.2}))) == ["options.size.height"]
+      assert paths(Orders.check(size.(%{"width" => 1.9, "length" => 5.932}))) == ["options.size.width"]
+      assert World.Vehicles.Van.sizes("sprinter_144")["height"] == {2.328, 2.84}
+    end
+
     test "a person needs one origin" do
       none = %{"african" => 0, "asian" => 0, "caucasian" => 0}
       assert paths(Orders.check(%{"blueprint" => "person", "options" => %{"origin" => none}})) == ["options.origin"]
@@ -220,6 +230,7 @@ defmodule World.FactoryTest do
           "blueprint" => "van",
           "options" => %{
             "model" => "transit_148_medium",
+            "size" => %{"height" => 2.6},
             "windows" => "crew",
             "engine_bay" => ["dc_charger"],
             "roof" => [%{"kind" => "solar", "at" => 3.8}, %{"kind" => "fan", "at" => 5.2}]

@@ -502,11 +502,22 @@ defmodule World.Orders.Blueprints do
               ]
             ),
           doc: "The items on the roof: a roof fan (MaxxFan) or a solar panel of 400 W."
+        ),
+        option("size", :object,
+          default: %{},
+          fields: [
+            option("length", :number, default: nil, min: 3.0, max: 9.0, unit: "m"),
+            option("width", :number, default: nil, min: 1.5, max: 2.5, unit: "m", doc: "With no mirrors."),
+            option("height", :number, default: nil, min: 1.5, max: 3.5, unit: "m")
+          ],
+          doc:
+            "The sizes of the van, over those of the model. The model has the sizes that the maker gives for the US; the sizes for another market can be different (the Sprinter of Mercedes-Benz Australia is 2.331 m high with a standard roof, the US page gives 100 in). Each size can be only a little different from the model: a size out of the limits of the model gives an error with the limits."
         )
       ],
       build: fn o ->
         Van.build(o["model"],
           name: "van",
+          size: o["size"],
           windows: Map.fetch!(@van_atoms, o["windows"]),
           engine_bay: Enum.map(o["engine_bay"], &Map.fetch!(@van_atoms, &1)),
           roof: for(%{"kind" => k, "at" => d} <- o["roof"], do: {Map.fetch!(@van_atoms, k), d})
@@ -519,9 +530,23 @@ defmodule World.Orders.Blueprints do
     }
   end
 
-  # Each item on the roof is on its flat part, and two items do not touch.
+  # The sizes are in the limits of the model; each item on the roof is on
+  # its flat part, and two items do not touch.
   defp van_check(o) do
-    {d0, d1} = Van.roof_span(o["model"])
+    limits = Van.sizes(o["model"])
+
+    sizes =
+      for {k, v} <- Enum.sort(o["size"]),
+          v != nil,
+          {min, max} = limits[k],
+          v < min or v > max,
+          do: {"options.size.#{k}", "must be from #{min} to #{max} m for the model #{o["model"]}"}
+
+    if sizes == [], do: roof_check(o), else: sizes
+  end
+
+  defp roof_check(o) do
+    {d0, d1} = Van.roof_span(o["model"], o["size"])
 
     spans =
       for {%{"kind" => k, "at" => d}, i} <- Enum.with_index(o["roof"]) do

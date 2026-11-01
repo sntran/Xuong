@@ -45,10 +45,14 @@ defmodule World.Vehicles.Van.Openings do
 
   defp outline(van), do: for([x, z] <- van.make["openings"]["front_door"], do: {van.f + x, z / 1})
 
-  @doc "The opening of the sliding door at the right side."
+  @doc """
+  The opening of the sliding door at the right side. Its top stays under
+  the round edge of the roof, also for a van that an order makes lower.
+  """
   def sliding_door(van, d, gap \\ 0.0) do
     {s0, s1} = sliding_door_span(van)
     [z0, z1] = van.make["openings"]["sliding_door"]["z"]
+    z1 = min(z1, Hull.z_high(van.h, d) - van.h.edge - 0.01)
 
     if d >= s0 + gap and d <= s1 - gap,
       do: [{:x_min, Hull.half_width(van.h, d) - @side}, {:z_min, z0 + gap}, {:z_max, z1 - gap}]

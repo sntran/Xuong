@@ -485,7 +485,9 @@ defmodule World.Vehicles.Van.Trim do
   end
 
   # The two front seats on their tracks, and the rows of the crew van (the
-  # first row) and of the passenger van (all the rows of the make).
+  # first row) and of the passenger van (the rows of the make that go in
+  # the body: a seat is 0.5 m deep behind the center of its cushion, and
+  # the rear doors are 0.1 m thick).
   defp seats(asm, van) do
     %{"front" => front, "rows" => rows, "sources" => sources} = van.make["seats"]
 
@@ -493,7 +495,7 @@ defmodule World.Vehicles.Van.Trim do
       case van.windows do
         :cargo -> []
         :crew -> Enum.take(rows, 1)
-        :passenger -> rows
+        :passenger -> Enum.filter(rows, &(van.f + &1["d"] + 0.5 <= van.l - 0.1))
       end
 
     opts = fn data -> [place_width: data["place_width"], sources: sources] end

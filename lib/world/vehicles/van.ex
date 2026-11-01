@@ -42,11 +42,27 @@ defmodule World.Vehicles.Van do
   @doc "The names of the models of vans."
   def models, do: @data["models"] |> Map.keys() |> Enum.sort()
 
-  @doc "The data of a model, with its make."
+  @doc """
+  The data of a model, with its make. The `openings` of a model (a
+  standard roof has lower doors) replace those of its make: each key of
+  a map, or the full value of the key.
+  """
   def model(name) do
     m = Map.fetch!(@data["models"], name)
-    Map.put(m, "make_data", Map.fetch!(@data["makes"], m["make"]))
+    own = Map.get(m, "openings", %{})
+
+    make =
+      Map.update!(
+        Map.fetch!(@data["makes"], m["make"]),
+        "openings",
+        &Map.merge(&1, own, fn _k, a, b -> merge(a, b) end)
+      )
+
+    Map.put(m, "make_data", make)
   end
+
+  defp merge(%{} = a, %{} = b), do: Map.merge(a, b)
+  defp merge(_a, b), do: b
 
   @doc "The hull of a model."
   def hull(name) do

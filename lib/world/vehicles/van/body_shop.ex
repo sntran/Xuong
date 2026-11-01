@@ -123,8 +123,10 @@ defmodule World.Vehicles.Van.BodyShop do
         World.Shape.rings([ring.(x0), ring.(x1)], :black)
       end
 
-    pillar =
-      World.Shape.box({hw - 0.14, l - (s0 + 0.06), 0.42}, {hw - 0.06, l - (f1 - 0.04), 2.36}, :paint)
+    # The pillar goes to 2.36 m, but not out through the side, which
+    # leans in over the belt.
+    top = min(2.36, lean_in(Hull.half(h, (f1 + s0) / 2), hw - 0.06) - 0.01)
+    pillar = World.Shape.box({hw - 0.14, l - (s0 + 0.06), 0.42}, {hw - 0.06, l - (f1 - 0.04), top}, :paint)
 
     Kit.part(@station, "inside_" <> m["make"], :body, [pillar | floors ++ wells], [Kit.origin() | mounts(van)],
       detail: :near,
@@ -148,5 +150,13 @@ defmodule World.Vehicles.Van.BodyShop do
 
     [at.("seat_driver", -x, d, @cab_floor), at.("seat_passenger", x, d, @cab_floor)] ++
       for {row, i} <- Enum.with_index(seats["rows"], 2), do: at.("row_#{i}", row["x"], row["d"], m["floor"])
+  end
+
+  # The z where the right half of a section (`World.Vehicles.Hull.half/2`)
+  # comes in past `x` at the top: the side leans in over the belt.
+  defp lean_in(half, x) do
+    half
+    |> Enum.chunk_every(2, 1, :discard)
+    |> Enum.find_value(fn [{x0, z0}, {x1, z1}] -> if x0 >= x and x1 < x, do: z0 + (z1 - z0) * (x0 - x) / (x0 - x1) end)
   end
 end

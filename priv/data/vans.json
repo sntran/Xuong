@@ -383,6 +383,117 @@
   "ram_promaster": {
    "name": "Ram ProMaster (US, 2023 to 2026)",
    "traces": {
+    "standard": {
+     "top": 2.18,
+     "back": [
+      [
+       0.2,
+       "top"
+      ],
+      [
+       0.12,
+       2.17
+      ],
+      [
+       0.09,
+       2.15
+      ],
+      [
+       0.075,
+       2.1
+      ],
+      [
+       0.06,
+       2.05
+      ],
+      [
+       0.048,
+       2.0
+      ],
+      [
+       0.024,
+       1.96
+      ],
+      [
+       0.014,
+       1.5
+      ],
+      [
+       0.01,
+       0.9
+      ],
+      [
+       0.005,
+       0.6
+      ],
+      [
+       0.0,
+       0.46
+      ],
+      [
+       0.03,
+       0.43
+      ],
+      [
+       0.1,
+       0.42
+      ],
+      [
+       0.35,
+       0.41
+      ]
+     ],
+     "roof": [
+      [
+       0.88,
+       1.58
+      ],
+      [
+       0.97,
+       1.68
+      ],
+      [
+       1.07,
+       1.77
+      ],
+      [
+       1.17,
+       1.86
+      ],
+      [
+       1.27,
+       1.96
+      ],
+      [
+       1.38,
+       2.06
+      ],
+      [
+       1.43,
+       2.09
+      ],
+      [
+       1.5,
+       2.13
+      ],
+      [
+       1.6,
+       2.145
+      ],
+      [
+       1.8,
+       2.163
+      ],
+      [
+       2.05,
+       2.175
+      ],
+      [
+       2.4,
+       "top"
+      ]
+     ]
+    },
     "high": {
      "top": 2.46,
      "back": [
@@ -519,7 +630,8 @@
    },
    "sources": [
     "The traces of the side: the 2026 ProMaster 159 in, high roof, from its render on the side on the cargo page of Ram (sent by the owner on 2026-11-01), the length (236.1 in) and the height (99.4 in) of the 2018 Ram ProMaster brochure as the scales (207.6 px/m along, 210.7 px/m up). The render has a little perspective: the wheelbase in it is 2.8% too long, so the d of a point is from the nearer end (the front or the back), not from the axles.",
-    "Ram, ProMaster brochure 2018, page 22 (the same body since 2014): the lengths 213.1, 236.1 and 250.5 in, the width 80.7 in with no mirrors, the height 99.4 in (high roof), the cargo length 122.8, 145.9 and 160.2 in, the side door 49.2 by 69.0 in, the rear doors 61.5 by 70.5 in.",
+    "The traces of the standard roof: the 2026 ProMaster 136 in, standard roof, from its render on the side on the cargo page of Ram (sent by the owner on 2026-11-01). The render of Ram has the camera of the render of the high roof: with its scales (207.5 px/m along, 210.8 px/m up), the van is 5.413 m long, the length of Ram, and the windshield is on that of the high roof to 0.02 m. The roof is flat at 2.18 m; the antenna on the roof is left out.",
+    "Ram, ProMaster brochure 2018, page 22 (the same body since 2014): the lengths 195.4, 213.1, 236.1 and 250.5 in, the width 80.7 in with no mirrors, the height 88.7 in (standard roof) and 99.4 in (high roof), the cargo length 105.1, 122.8, 145.9 and 160.2 in, the side door 42.3 by 58.5 in (118 in), 49.2 by 58.5 in (136 in, standard roof) and 49.2 by 69.0 in (high roof), the rear doors 61.5 by 59.8 in (standard roof) and 61.5 by 70.5 in (high roof).",
     "Ram, the cargo page of the 2023 ProMaster (https://www.ram.com/bo/ram-promaster/cargo.html, and the screenshots of the owner on 2026-11-01): the floor at 21 in, 56 in between the wheel wells, the cargo width 6 ft 3 in, the cargo heights 5 ft 6 in (standard roof), 6 ft 5 in (high roof) and 7 ft 2 in (super high roof), the cargo lengths 8, 10, 12 and 13 ft.",
     "The sill at 0.38 m, as the Transit: the black band at the bottom of the side is from 0.44 to 0.59 m in the render of Ram, and the trim of the line (the trim of the Transit) has its black edge under 0.41 m."
    ],
@@ -738,6 +850,129 @@
   "mercedes_sprinter": {
    "name": "Mercedes-Benz Sprinter (US, BM907, 2019 to 2026)",
    "traces": {
+    "standard": {
+     "top": 2.338,
+     "back": [
+      [
+       0.245,
+       "top"
+      ],
+      [
+       0.175,
+       2.311
+      ],
+      [
+       0.118,
+       2.292
+      ],
+      [
+       0.099,
+       2.273
+      ],
+      [
+       0.08,
+       2.235
+      ],
+      [
+       0.066,
+       2.187
+      ],
+      [
+       0.058,
+       2.16
+      ],
+      [
+       0.047,
+       2.02
+      ],
+      [
+       0.035,
+       1.85
+      ],
+      [
+       0.023,
+       1.65
+      ],
+      [
+       0.012,
+       1.45
+      ],
+      [
+       0.008,
+       1.0
+      ],
+      [
+       0.004,
+       0.7
+      ],
+      [
+       0.0,
+       0.48
+      ],
+      [
+       0.02,
+       0.42
+      ],
+      [
+       0.07,
+       0.385
+      ],
+      [
+       0.3,
+       0.36
+      ]
+     ],
+     "roof": [
+      [
+       0.98,
+       1.6
+      ],
+      [
+       1.074,
+       1.69
+      ],
+      [
+       1.179,
+       1.785
+      ],
+      [
+       1.26,
+       1.879
+      ],
+      [
+       1.365,
+       1.972
+      ],
+      [
+       1.459,
+       2.066
+      ],
+      [
+       1.564,
+       2.159
+      ],
+      [
+       1.638,
+       2.201
+      ],
+      [
+       1.734,
+       2.24
+      ],
+      [
+       1.914,
+       2.294
+      ],
+      [
+       2.2,
+       2.32
+      ],
+      [
+       2.6,
+       "top"
+      ]
+     ]
+    },
     "high": {
      "top": 2.614,
      "back": [
@@ -894,6 +1129,7 @@
    },
    "sources": [
     "The traces of the side: the drawing of the high roof van with a wheelbase of 144 in in the guide (Mercedes-Benz, Body and Equipment Guideline Sprinter BM907, edition 2024-9 (sent by the owner), chapter 6, the placard holders), to scale: its wheelbase (314 px for 3665 mm, 85.7 px/m) gives the front overhang 1.027 m, the back overhang 1.249 m and the length 5.94 m of the guide (1021, 1246 and 5932 mm), and the roof at 2.614 m.",
+    "The traces of the standard roof: the roof and the upper corner of the back from the vector drawing of the 12-seat minibus, 144 in, standard roof, in Mercedes-Benz Vans Australia, Sprinter Technical Data MY2022, page 39 (https://www.dovecamperconversions.com.au/storage/2023/10/Mercedes-Benz-Vans-Sprinter-Technical-Data-Brochure-Feb-2022-1.pdf), at 1200 dpi (1.903 mm a pixel, the wheelbase as the scale), to 0.01 m; the air conditioner on the roof of the minibus is not in the trace. Up to 2.16 m (the windshield, and the back under the roof) the traces of the high roof: where the two roofs have the same body, this drawing and that of the guide agree to 6 mm.",
     "Mercedes-Benz, Body and Equipment Guideline Sprinter BM907, edition 2024-9 (sent by the owner): page 300, the lengths 5932, 6967 and 7367 mm and the wheelbases 3665 and 4325 mm; page 65, 1021 mm from the front end to the front axle, 1503 mm from the front axle to the back of the B-pillar, and 726 mm from there to the top edge of the windshield.",
     "Mercedes-Benz Vans, the cargo van page (https://www.mbvans.com/en/sprinter/cargo-van): the floor at 28 in, the side door 51 in wide, the rear door 61 in wide; the heights 100 in (standard roof) and 107 in (high roof) of the US page are higher than the drawing of the guide (2.614 m): the model has the height of the drawing."
    ],
@@ -1035,7 +1271,7 @@
      "to": 2.9,
      "z": [
       0.43,
-      2.3
+      2.5
      ]
     },
     "windshield": {
@@ -1050,7 +1286,7 @@
     },
     "sources": [
      "The front door: to 1.45 m behind the front axle (the back of the B-pillar at 1.503 m, page 65 of the guide), from 0.43 to 2.27 m, and its window from 1.48 to 2.07 m: the drawing of the guide; its front edge: by eye from the drawing.",
-     "The sliding door: from 1.55 to 2.90 m behind the front axle (an opening of 51 in, the US page), from 0.43 to 2.30 m: by eye from the drawing.",
+     "The sliding door: from 1.55 to 2.90 m behind the front axle (an opening of 51 in, the US page), from 0.43 m: by eye from the drawing of the guide. Its top: the US page gives an opening 72 in (high roof) and 60 in (standard roof) high from the floor at 28 in, to 2.54 m and 2.24 m; the vector drawings of Mercedes-Benz Vans Australia (Sprinter Technical Data MY2022, page 39) have the panel to 2.57 m and 2.30 m. The model has 2.30 m (standard roof) and 2.50 m (high roof): 2.50 m is under the round edge of the roof, 0.04 m lower than the opening, so the vans of 170 in stay under 12,000 triangles at mid.",
      "The rear doors: from the lamps (0.11 m in) to the middle, from 0.75 m to 0.05 m over the opening of 73 in from the floor at 28 in (the cargo van page of Mercedes-Benz Vans Canada; the US page): by eye from the drawing."
     ]
    },
@@ -1166,6 +1402,65 @@
    ],
    "quarter_end": 5.12
   },
+  "promaster_118": {
+   "make": "ram_promaster",
+   "name": "Ram ProMaster 118 in, standard roof",
+   "roof": "standard",
+   "width": 2.05,
+   "height": 2.253,
+   "front": 0.879,
+   "track": [
+    1.811,
+    1.791
+   ],
+   "tire": "225/75R16",
+   "floor": 0.533,
+   "rear_door": 1.519,
+   "length": 4.963,
+   "wheelbase": 2.997,
+   "sources": [
+    "Ram, ProMaster brochure 2018, page 22: 195.4 by 80.7 by 88.7 in, wheelbase 118 in; the rear doors 61.5 by 59.8 in. The side door is 42.3 in wide, 6.9 in less than that of the 136 in: its panel ends at 2.49 m behind the front axle, before the arch of the rear wheel (the render of Ram of the 118 in, with its wheelbase as the scale, sent by the owner on 2026-11-01). The side door is 10.5 in lower than that of the high roof (58.5 in against 69.0 in), so its panel goes to 2.09 m. The front overhang, the tracks and the tire: as the high roof."
+   ],
+   "quarter_end": 3.564,
+   "openings": {
+    "sliding_door": {
+     "to": 2.49,
+     "z": [
+      0.44,
+      2.093
+     ]
+    }
+   }
+  },
+  "promaster_136": {
+   "make": "ram_promaster",
+   "name": "Ram ProMaster 136 in, standard roof",
+   "roof": "standard",
+   "width": 2.05,
+   "height": 2.253,
+   "front": 0.879,
+   "track": [
+    1.811,
+    1.791
+   ],
+   "tire": "225/75R16",
+   "floor": 0.533,
+   "rear_door": 1.519,
+   "length": 5.413,
+   "wheelbase": 3.454,
+   "sources": [
+    "Ram, ProMaster brochure 2018, page 22: 213.1 by 80.7 by 88.7 in, wheelbase 136 in; the rear doors 61.5 by 59.8 in. The side door is 10.5 in lower than that of the high roof (58.5 in against 69.0 in), so its panel goes to 2.09 m. The front overhang, the tracks and the tire: as the high roof."
+   ],
+   "quarter_end": 4.014,
+   "openings": {
+    "sliding_door": {
+     "z": [
+      0.44,
+      2.093
+     ]
+    }
+   }
+  },
   "promaster_136_high": {
    "make": "ram_promaster",
    "name": "Ram ProMaster 136 in, high roof",
@@ -1229,6 +1524,69 @@
    ],
    "quarter_end": 4.964
   },
+  "sprinter_144": {
+   "make": "mercedes_sprinter",
+   "name": "Mercedes-Benz Sprinter 144 in, standard roof",
+   "roof": "standard",
+   "length": 5.932,
+   "width": 2.032,
+   "height": 2.331,
+   "wheelbase": 3.665,
+   "front": 1.021,
+   "track": [
+    1.72,
+    1.72
+   ],
+   "tire": "245/75R16",
+   "floor": 0.711,
+   "rear_door": 1.549,
+   "sources": [
+    "The guide of Mercedes-Benz (BM907, 2024-9): length 5932 mm, wheelbase 3665 mm, front overhang 1021 mm. The height 2331 mm: Mercedes-Benz Vans Australia, Sprinter Technical Data MY2022, page 11, the panel van of 3.55 t (its high roof, 2620 mm, is the height of page 300 of the guide). The rear door 61 in high: the US page of Mercedes-Benz Vans. The width, the tracks and the tire: as the high roof.",
+    "The top of the windshield at 2.17 m: the vector drawing of page 39 (Mercedes-Benz Vans Australia). The top of the front door at 2.20 m, under the edge of the roof: a guess (the drawing of page 17 gives 2.23 m, to 0.03 m)."
+   ],
+   "quarter_end": 4.391,
+   "openings": {
+    "front_door": [
+     [
+      0.3,
+      0.75
+     ],
+     [
+      0.55,
+      0.43
+     ],
+     [
+      1.45,
+      0.43
+     ],
+     [
+      1.45,
+      2.2
+     ],
+     [
+      0.63,
+      2.2
+     ],
+     [
+      0.18,
+      1.55
+     ],
+     [
+      0.25,
+      1.25
+     ]
+    ],
+    "sliding_door": {
+     "z": [
+      0.43,
+      2.3
+     ]
+    },
+    "windshield": {
+     "top": 2.17
+    }
+   }
+  },
   "sprinter_144_high": {
    "make": "mercedes_sprinter",
    "name": "Mercedes-Benz Sprinter 144 in, high roof",
@@ -1268,9 +1626,9 @@
    "rear_door": 1.854,
    "sources": [
     "The guide of Mercedes-Benz (BM907, 2024-9): length 6967 mm, wheelbase 4325 mm, front overhang 1021 mm; the height 2.614 m from its drawing. The width 80 in: the US page of Mercedes-Benz Vans (the width of the 3500 trims). A guess: the tracks of 1.72 m and the tire 245/75R16 (no maker document).",
-    "The windows of an order with windows all around end at 4.6 m behind the front axle (quarter_end, a guess), so the van stays under 50,000 triangles at near."
+    "The windows of an order with windows all around end at 4.5 m behind the front axle (quarter_end, a guess), so the van stays under the limits of triangles at near and at mid."
    ],
-   "quarter_end": 4.6
+   "quarter_end": 4.5
   },
   "sprinter_170_ext_high": {
    "make": "mercedes_sprinter",

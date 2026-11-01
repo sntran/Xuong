@@ -192,11 +192,12 @@ defmodule World.Vehicles.Van.Trim do
     end
 
     back = f + wb - ar + 0.02
+    [b0, b1] = band(van)
 
     bands = [
-      band.(-1, door1, back, 0.5, 0.78),
-      band.(1, s1, back, 0.5, 0.78),
-      band.(1, door1, s0, 0.5, 0.78),
+      band.(-1, door1, back, b0, b1),
+      band.(1, s1, back, b0, b1),
+      band.(1, door1, s0, b0, b1),
       band.(1, f + af - 0.02, back, 0.0, 0.41),
       band.(-1, f + af - 0.02, back, 0.0, 0.41)
     ]
@@ -238,6 +239,12 @@ defmodule World.Vehicles.Van.Trim do
       ]
     )
   end
+
+  @doc """
+  The black band on the sides and the doors: `[bottom, top]` in meters,
+  `trim.band` of the make, or 0.5 to 0.78 m (the Transit).
+  """
+  def band(van), do: get_in(van.make, ["trim", "band"]) || [0.5, 0.78]
 
   # --- The lamps --------------------------------------------------------------------------
 

@@ -12,7 +12,7 @@ defmodule World.Vehicles.Van.Closures do
   """
   alias World.{Assembly, Detail, Shape, Vec}
   alias World.Vehicles.Hull
-  alias World.Vehicles.Van.{Kit, Openings}
+  alias World.Vehicles.Van.{Kit, Openings, Trim}
   @station "closures"
   @gap 0.004
 
@@ -103,13 +103,14 @@ defmodule World.Vehicles.Van.Closures do
               )
 
             [{_, _, af} | _] = h.arches
+            [b0, b1] = Trim.band(van)
 
             band =
               Hull.skin(h, f + af - 0.02, d1 - @gap, :trim,
                 offset: o + 0.006,
                 sides: 12,
                 step: 0.1,
-                clip: fn d -> Kit.mirror([{:x_min, Hull.half_width(h, d) - 0.06}, {:z_min, 0.5}, {:z_max, 0.78}], s) end
+                clip: fn d -> Kit.mirror([{:x_min, Hull.half_width(h, d) - 0.06}, {:z_min, b0}, {:z_max, b1}], s) end
               )
 
             hw = Hull.half_width(h, 2.0)
@@ -189,12 +190,14 @@ defmodule World.Vehicles.Van.Closures do
                 )
             end
 
+          [b0, b1] = Trim.band(van)
+
           band =
             Hull.skin(h, s0 + @gap, s1 - @gap, :trim,
               offset: o + 0.006,
               sides: 12,
               step: 0.1,
-              clip: fn d -> [{:x_min, Hull.half_width(h, d) - 0.06}, {:z_min, 0.5}, {:z_max, 0.78}] end
+              clip: fn d -> [{:x_min, Hull.half_width(h, d) - 0.06}, {:z_min, b0}, {:z_max, b1}] end
             )
 
           handle = Shape.box({hw + o, l - s0 - 0.25, 1.15}, {hw + o + 0.025, l - s0 - 0.09, 1.185}, :black)

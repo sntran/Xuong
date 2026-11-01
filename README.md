@@ -119,7 +119,7 @@ models").
 | W5. The world: the buildings | The people build the warehouse and the factories as orders to the houses factory. A warehouse has a rack for each 64 MiB of its store, and the replay shows how full they are. | Done |
 | W6. The world: the stores | The stock is the files: each warehouse has a store (the memory of the VM, a bucket, or the catalog of the release). A full warehouse refuses the model, and the driver brings it to the annex. A second order gets the same files from the stock. | Done |
 | W7. The world: the measures | Each run has its time and its memory in its log. An order of Phượt gives its files and its log, and the times agree with the service. The release is 31 MB (no catalog files in it), so the site can deploy again. | Done |
-| W8. The world: the other vans | The Sprinter, the ProMaster and the crew van. The sizes of the makers are found; the side traces need the guides of the makers, the drawings of Outlines or photos from the owner. | Blocked |
+| W8. The world: the other vans | The ProMaster with a high roof (136 in, 159 in, 159 in extended), from the render and the sizes of Ram. The Sprinter and the crew van wait for their sources. | In progress |
 | W9. The world: the engineers | Later, with the owner. | To do |
 | 7. DIY uses World | DIY draws its SVG from the models, and keeps its pictures. | To do |
 | 8. Voxel models | The `.vox` reader and writer, the voxel maker, and the stamp of a model into the grid of Tre. | To do |

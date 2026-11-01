@@ -379,6 +379,361 @@
      "The seats and their rows: by eye from the photos of the inside of a 2026 Transit passenger van (https://www.comvoy.com/work-van/fenton-mi/new-2026-ford-transit-350-xl-passenger-van-25226733); Ford gives 12 seats in four rows (2, 3, 3, 4)."
     ]
    }
+  },
+  "ram_promaster": {
+   "name": "Ram ProMaster (US, 2023 to 2026)",
+   "traces": {
+    "high": {
+     "top": 2.46,
+     "back": [
+      [
+       0.19,
+       "top"
+      ],
+      [
+       0.145,
+       2.44
+      ],
+      [
+       0.12,
+       2.34
+      ],
+      [
+       0.096,
+       2.25
+      ],
+      [
+       0.077,
+       2.15
+      ],
+      [
+       0.058,
+       2.06
+      ],
+      [
+       0.024,
+       1.96
+      ],
+      [
+       0.014,
+       1.5
+      ],
+      [
+       0.01,
+       0.9
+      ],
+      [
+       0.005,
+       0.6
+      ],
+      [
+       0.0,
+       0.46
+      ],
+      [
+       0.03,
+       0.43
+      ],
+      [
+       0.1,
+       0.42
+      ],
+      [
+       0.35,
+       0.41
+      ]
+     ],
+     "roof": [
+      [
+       0.88,
+       1.58
+      ],
+      [
+       0.97,
+       1.68
+      ],
+      [
+       1.07,
+       1.77
+      ],
+      [
+       1.17,
+       1.86
+      ],
+      [
+       1.27,
+       1.96
+      ],
+      [
+       1.38,
+       2.06
+      ],
+      [
+       1.47,
+       2.15
+      ],
+      [
+       1.59,
+       2.26
+      ],
+      [
+       1.7,
+       2.33
+      ],
+      [
+       1.82,
+       2.41
+      ],
+      [
+       1.94,
+       2.44
+      ],
+      [
+       2.05,
+       "top"
+      ]
+     ]
+    }
+   },
+   "hull": {
+    "belt": 1.35,
+    "lean": 0.05,
+    "edge": 0.1,
+    "crown": [
+     0.3,
+     0.75
+    ],
+    "nose": [
+     0.3,
+     1.8
+    ],
+    "tail": [
+     0.1,
+     4.0
+    ],
+    "sill": 0.38,
+    "arches": [
+     0.5,
+     0.5
+    ]
+   },
+   "sources": [
+    "The traces of the side: the 2026 ProMaster 159 in, high roof, from its render on the side on the cargo page of Ram (sent by the owner on 2026-11-01), the length (236.1 in) and the height (99.4 in) of the 2018 Ram ProMaster brochure as the scales (207.6 px/m along, 210.7 px/m up). The render has a little perspective: the wheelbase in it is 2.8% too long, so the d of a point is from the nearer end (the front or the back), not from the axles.",
+    "Ram, ProMaster brochure 2018, page 22 (the same body since 2014): the lengths 213.1, 236.1 and 250.5 in, the width 80.7 in with no mirrors, the height 99.4 in (high roof), the cargo length 122.8, 145.9 and 160.2 in, the side door 49.2 by 69.0 in, the rear doors 61.5 by 70.5 in.",
+    "Ram, the cargo page of the 2023 ProMaster (https://www.ram.com/bo/ram-promaster/cargo.html, and the screenshots of the owner on 2026-11-01): the floor at 21 in, 56 in between the wheel wells, the cargo width 6 ft 3 in, the cargo heights 5 ft 6 in (standard roof), 6 ft 5 in (high roof) and 7 ft 2 in (super high roof), the cargo lengths 8, 10, 12 and 13 ft.",
+    "The sill at 0.38 m, as the Transit: the black band at the bottom of the side is from 0.44 to 0.59 m in the render of Ram, and the trim of the line (the trim of the Transit) has its black edge under 0.41 m."
+   ],
+   "front": [
+    [
+     0.32,
+     0.19
+    ],
+    [
+     0.12,
+     0.2
+    ],
+    [
+     0.06,
+     0.3
+    ],
+    [
+     0.03,
+     0.4
+    ],
+    [
+     0.004,
+     0.5
+    ],
+    [
+     0.0,
+     0.54
+    ],
+    [
+     0.004,
+     0.58
+    ],
+    [
+     0.025,
+     0.63
+    ],
+    [
+     0.04,
+     0.75
+    ],
+    [
+     0.05,
+     0.85
+    ],
+    [
+     0.09,
+     0.92
+    ],
+    [
+     0.19,
+     1.01
+    ],
+    [
+     0.23,
+     1.11
+    ],
+    [
+     0.29,
+     1.2
+    ],
+    [
+     0.47,
+     1.3
+    ],
+    [
+     0.67,
+     1.39
+    ],
+    [
+     0.76,
+     1.49
+    ]
+   ],
+   "front_note": "The center line of the front, from the bottom of the bumper to the base of the windshield, and the windshield and the front of the roof (traces.high.roof): traced from the render of Ram (sources).",
+   "windows": {
+    "side": {
+     "from": 1.43,
+     "z": [
+      1.36,
+      2.08
+     ],
+     "seams": [
+      2.8,
+      3.79
+     ],
+     "front_top": 0.18,
+     "back_top": 0.09,
+     "back_bottom": 0.3
+    },
+    "slider": {
+     "from": 1.44,
+     "front_top": 0.2
+    },
+    "rear_doors": {
+     "x": 0.86,
+     "z": [
+      1.32,
+      2.23
+     ],
+     "outer_top": 0.07,
+     "outer_bottom": 0.2
+    },
+    "sources": [
+     "A guess: the windows of the Transit. Ram does not sell a ProMaster with windows behind the cab in the US, and the line builds them only for an order with windows."
+    ]
+   },
+   "openings": {
+    "note": "x is from the front axle, z from the ground (meters).",
+    "front_door": [
+     [
+      0.072,
+      0.7
+     ],
+     [
+      0.4,
+      0.44
+     ],
+     [
+      1.195,
+      0.44
+     ],
+     [
+      1.195,
+      2.07
+     ],
+     [
+      0.737,
+      2.07
+     ],
+     [
+      0.135,
+      1.65
+     ],
+     [
+      0.072,
+      1.41
+     ]
+    ],
+    "door_window": {
+     "belt": 1.35,
+     "rise": 0.0,
+     "run": 1.0,
+     "top": 2.0
+    },
+    "sliding_door": {
+     "from": 1.276,
+     "to": 2.736,
+     "z": [
+      0.44,
+      2.36
+     ]
+    },
+    "windshield": {
+     "base": 0.72,
+     "inset": 0.11,
+     "top": 2.12
+    },
+    "rear_doors": {
+     "lamp": 0.12,
+     "bottom": 0.9,
+     "over": 0.05
+    },
+    "sources": [
+     "The front door: its seam at 1.20 m behind the front axle, its top at 2.07 m, its bottom at 0.44 m, its front along the fender at 0.07 m and along the windshield; its window from 1.35 to 2.00 m (the render of Ram, sources of the make).",
+     "The sliding door: from 1.28 to 2.74 m behind the front axle (the render of Ram); the opening is 49.2 by 69.0 in from the floor at 21 in (Ram), so the panel goes to 2.36 m.",
+     "The rear doors: from the lamps at the back (0.12 m in from the side) to the middle, from 0.90 m (over the bumper, the render of Ram) to 0.05 m over the opening of 70.5 in from the floor (Ram)."
+    ]
+   },
+   "seats": {
+    "front": {
+     "x": 0.45,
+     "d": 1.05,
+     "height": 0.5,
+     "place_width": 0.52,
+     "track": 0.2,
+     "recline": [
+      0,
+      40
+     ]
+    },
+    "rows": [
+     {
+      "x": -0.25,
+      "d": 1.95,
+      "places": 3,
+      "place_width": 0.43
+     },
+     {
+      "x": -0.25,
+      "d": 2.85,
+      "places": 3,
+      "place_width": 0.43
+     },
+     {
+      "x": 0.0,
+      "d": 3.75,
+      "places": 4,
+      "place_width": 0.46
+     }
+    ],
+    "note": "x across from the center line, d back from the front axle, to the center of the cushion; height of the top of the cushion above its floor.",
+    "sources": [
+     "A guess: the seats and the rows of the Transit (the passenger van of the line)."
+    ]
+   },
+   "trim": {
+    "band": [
+     0.44,
+     0.59
+    ],
+    "sources": [
+     "The black band on the sides and the doors from 0.44 to 0.59 m, and the arches of the wheels of 0.5 m: the render of Ram (sources of the make)."
+    ]
+   }
   }
  },
  "models": {
@@ -444,6 +799,69 @@
     "Ford, 2025 Transit Technical Specifications: 263.9 by 81.3 by 110.4 in; Body Builders Layout Book 2022: rear overhang 1931 mm, floor 712 mm."
    ],
    "quarter_end": 5.12
+  },
+  "promaster_136_high": {
+   "make": "ram_promaster",
+   "name": "Ram ProMaster 136 in, high roof",
+   "roof": "high",
+   "width": 2.05,
+   "height": 2.525,
+   "front": 0.879,
+   "track": [
+    1.811,
+    1.791
+   ],
+   "tire": "225/75R16",
+   "floor": 0.533,
+   "rear_door": 1.791,
+   "length": 5.413,
+   "wheelbase": 3.454,
+   "sources": [
+    "Ram, ProMaster brochure 2018, page 22: 213.1 by 80.7 by 99.4 in, wheelbase 136 in. The front overhang 0.879 m: from the render of Ram (the overhangs in the ratio of the render, to the length of Ram). The tracks 71.3 and 70.5 in: iSeeCars, not a maker; the tire LT225/75R16: Guide Auto (2023), not a maker."
+   ],
+   "quarter_end": 4.014
+  },
+  "promaster_159_high": {
+   "make": "ram_promaster",
+   "name": "Ram ProMaster 159 in, high roof",
+   "roof": "high",
+   "width": 2.05,
+   "height": 2.525,
+   "front": 0.879,
+   "track": [
+    1.811,
+    1.791
+   ],
+   "tire": "225/75R16",
+   "floor": 0.533,
+   "rear_door": 1.791,
+   "length": 5.997,
+   "wheelbase": 4.039,
+   "sources": [
+    "Ram, ProMaster brochure 2018, page 22: 236.1 by 80.7 by 99.4 in, wheelbase 159 in. The front overhang 0.879 m: from the render of Ram (the overhangs in the ratio of the render, to the length of Ram). The tracks 71.3 and 70.5 in: iSeeCars, not a maker; the tire LT225/75R16: Guide Auto (2023), not a maker."
+   ],
+   "quarter_end": 4.598
+  },
+  "promaster_159_ext_high": {
+   "make": "ram_promaster",
+   "name": "Ram ProMaster 159 in extended, high roof",
+   "roof": "high",
+   "width": 2.05,
+   "height": 2.525,
+   "front": 0.879,
+   "track": [
+    1.811,
+    1.791
+   ],
+   "tire": "225/75R16",
+   "floor": 0.533,
+   "rear_door": 1.791,
+   "length": 6.363,
+   "wheelbase": 4.039,
+   "sources": [
+    "Ram, ProMaster brochure 2018, page 22: 250.5 by 80.7 by 99.4 in, wheelbase 159 in. The front overhang 0.879 m: from the render of Ram (the overhangs in the ratio of the render, to the length of Ram). The tracks 71.3 and 70.5 in: iSeeCars, not a maker; the tire LT225/75R16: Guide Auto (2023), not a maker."
+   ],
+   "quarter_end": 4.964
   }
  }
 }

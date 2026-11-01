@@ -154,17 +154,25 @@ defmodule World.Vehicles.Van.Openings do
     {van.f + w["from"], s1 - 0.03, %{ft: w["front_top"]}}
   end
 
+  # The window of the front door of the Transit (`door_window/2`): the
+  # belt at 1.21 m at 1 m from the front, 0.19 m higher each 1.24 m to
+  # the back, and the top at 1.98 m.
+  @door_window %{"belt" => 1.21, "rise" => 0.19, "run" => 1.24, "top" => 1.98}
+
   @doc """
-  The window of a front door: from the belt, which rises to the back, to
-  its top under the edge of the roof.
+  The window of a front door: from the belt (at `belt` 1 m from the
+  front, `rise` higher each `run` to the back) to its top (`top`, under
+  the edge of the roof). The numbers are `door_window` of the openings
+  of the make, those of the Transit by default.
   """
   def door_window(van, d) do
     {d0, d1} = front_door_span(van)
+    w = Map.get(van.make["openings"], "door_window", @door_window)
 
     with true <- d >= d0 + 0.04 and d <= d1 - 0.06,
          {_, b} <- span(outline(van), d, 0.0),
-         belt = 1.21 + 0.19 * (d - 1.0) / 1.24,
-         top = Enum.min([1.98, Hull.z_high(van.h, d) - 0.09, b - 0.05]),
+         belt = w["belt"] + w["rise"] * (d - 1.0) / w["run"],
+         top = Enum.min([w["top"], Hull.z_high(van.h, d) - 0.09, b - 0.05]),
          true <- top > belt + 0.02 do
       [{:x_min, Hull.half_width(van.h, d) - @side}, {:z_min, belt}, {:z_max, top}]
     else

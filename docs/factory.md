@@ -203,9 +203,9 @@ and a wider sliding door:
 }
 ```
 
-In the world, the doors factory makes each door to its numbers, with
-the glass of its window, and its truck brings the doors to the line of
-the van (`docs/world.md`, "The factories").
+In the world, the openings factory makes each door and each window to
+its numbers, and its truck brings them to the line of the van
+(`docs/world.md`, "The factories").
 
 The sizes of a van (`size`: `length`, `width`, `height`, in meters) are
 those of the US market by default: the sizes that the maker gives for

@@ -1,7 +1,7 @@
-defmodule World.Doors.Van do
+defmodule World.Openings.Van do
   @moduledoc """
-  The doors of a van, from the doors factory (`World.Doors`): each door
-  is an assembly of the kind `:door`, made to the
+  The doors and the windows of a van, from the openings factory
+  (`World.Openings`). Each door is an assembly of the kind `:door`, made to the
   numbers of the order of the van (`World.Vehicles.Van.Order`): its
   panel, the glass of its window (a window of the order), and the mirror
   of a front door. The line of the van (`World.Vehicles.Van.Closures`)
@@ -9,12 +9,18 @@ defmodule World.Doors.Van do
 
   A door at the near level fills its opening in the body, with a gap of
   4 mm around it; at the mid level it is on the closed body; at the far
-  level only the mirrors show (the glass of the windows is on the body).
+  level only the mirrors and the glass show.
+
+  The windows of the body (the windshield, and the windows at the left
+  and the right side, `windshield/1`, `side/2`) are assemblies of the
+  kind `:window`: the glass in its opening at the near level, flush with
+  the body, or on the closed body at the mid and far levels.
   """
   alias World.{Assembly, Detail, Shape, Vec}
   alias World.Vehicles.Hull
-  alias World.Vehicles.Van.{Kit, Openings, Trim}
-  @station "doors"
+  alias World.Vehicles.Van.{Kit, Trim}
+  alias World.Vehicles.Van.Openings, as: Cuts
+  @station "openings"
   @gap 0.004
 
   @doc """
@@ -23,14 +29,14 @@ defmodule World.Doors.Van do
   """
   def front(van, s) do
     %{h: h, l: l, f: f} = van
-    {d0, d1} = Openings.front_door_span(van)
+    {d0, d1} = Cuts.front_door_span(van)
     hinge = front_hinge(van, s)
-    window = fn d -> Openings.door_window(van, d) end
+    window = fn d -> Cuts.door_window(van, d) end
 
     {panel, glass} =
       case Detail.level() do
         :far ->
-          {[], []}
+          {[], region(van, d0, d1, window, s, :far)}
 
         _ ->
           o = out()
@@ -41,7 +47,7 @@ defmodule World.Doors.Van do
               thickness: 0.05,
               offset: o,
               step: 0.1,
-              clip: fn d -> Openings.front_door(van, d, @gap) || [{:z_min, 9.0}] end,
+              clip: fn d -> Cuts.front_door(van, d, @gap) || [{:z_min, 9.0}] end,
               holes: fn d -> holes([window.(d)]) end,
               edges: [d0 + @gap, d1 - @gap, d0 + 0.04, d1 - 0.06]
             )
@@ -83,20 +89,23 @@ defmodule World.Doors.Van do
   @doc "The sliding door at the right side, with its port `slide` on its rail."
   def sliding(van) do
     %{h: h, l: l} = van
-    {s0, s1} = Openings.sliding_door_span(van)
+    {s0, s1} = Cuts.sliding_door_span(van)
     hw = Hull.half_width(h, s0 + 0.15)
-    window = Openings.slider_window(van)
+    window = Cuts.slider_window(van)
 
     {panel, glass} =
-      case Detail.level() do
-        :far ->
+      case {Detail.level(), window} do
+        {:far, nil} ->
           {[], []}
+
+        {:far, {w0, w1, c}} ->
+          {[], region(van, w0, w1, &Cuts.side_window(van, &1, w0, w1, c), 1, :far)}
 
         _ ->
           o = out()
 
           hole = fn d ->
-            if window, do: [Openings.side_window(van, d, elem(window, 0), elem(window, 1), elem(window, 2))], else: []
+            if window, do: [Cuts.side_window(van, d, elem(window, 0), elem(window, 1), elem(window, 2))], else: []
           end
 
           panel =
@@ -104,7 +113,7 @@ defmodule World.Doors.Van do
               thickness: 0.05,
               offset: o,
               step: 0.1,
-              clip: fn d -> Openings.sliding_door(van, d, @gap) || [{:z_min, 9.0}] end,
+              clip: fn d -> Cuts.sliding_door(van, d, @gap) || [{:z_min, 9.0}] end,
               holes: fn d -> holes(hole.(d)) end,
               edges: [s0 + @gap, s1 - @gap | if(window, do: [elem(window, 0), elem(window, 1)], else: [])]
             )
@@ -119,7 +128,7 @@ defmodule World.Doors.Van do
                   thickness: 0.008,
                   offset: glass_out(),
                   step: 0.1,
-                  clip: fn d -> Openings.side_window(van, d, w0, w1, c) || [{:z_min, 9.0}] end
+                  clip: fn d -> Cuts.side_window(van, d, w0, w1, c) || [{:z_min, 9.0}] end
                 )
             end
 
@@ -150,20 +159,20 @@ defmodule World.Doors.Van do
 
   @doc "The port `hinge` of a front door, at its front edge."
   def front_hinge(%{h: h, l: l} = van, s) do
-    {d0, _} = Openings.front_door_span(van)
+    {d0, _} = Cuts.front_door_span(van)
     Kit.port("hinge", {s * Hull.half_width(h, d0 + 0.02), l - d0 - 0.02, 1.0}, {0, 0, s}, {0, 1, 0})
   end
 
   @doc "The port `hinge` of a rear door, at its outer edge."
   def rear_hinge(van, s) do
-    {_, hw, _, _} = Openings.rear(van)
+    {_, hw, _, _} = Cuts.rear(van)
     Kit.port("hinge", {s * hw, 0.0, 1.5}, {0, 0, s}, {0, 1, 0})
   end
 
   @doc "The port `slide` of the sliding door, on its rail: it slides back, and out from the body."
   def slide(van) do
     %{h: h, l: l} = van
-    {s0, s1} = Openings.sliding_door_span(van)
+    {s0, s1} = Cuts.sliding_door_span(van)
     hw = Hull.half_width(h, s0 + 0.15)
     Kit.port("slide", {hw, l - (s0 + s1) / 2, 1.4}, Vec.norm({0.1, -1.0, 0.0}), {0, 0, 1})
   end
@@ -172,14 +181,14 @@ defmodule World.Doors.Van do
   def rear(van, s) do
     %{h: h} = van
     {_, d1} = Hull.span(h)
-    {r0, _, _, _} = Openings.rear(van)
+    {r0, _, _, _} = Cuts.rear(van)
     hinge = rear_hinge(van, s)
-    window = fn d -> Openings.rear_window(van, d) end
+    window = fn d -> Cuts.rear_window(van, d) end
 
     {panel, glass} =
       case Detail.level() do
         :far ->
-          {[], []}
+          {[], if(Cuts.window(van, "rear_doors"), do: rear_glass(van, r0, d1, s, 0.008, 0.1), else: [])}
 
         _ ->
           o = out()
@@ -190,21 +199,11 @@ defmodule World.Doors.Van do
               thickness: 0.03,
               offset: o,
               step: 0.05,
-              clip: fn d -> Openings.rear_doors(van, d, @gap) end,
+              clip: fn d -> Cuts.rear_doors(van, d, @gap) end,
               holes: fn d -> holes([window.(d)]) end
             )
 
-          glass =
-            if Openings.window(van, "rear_doors"),
-              do:
-                Hull.shell(h, r0, d1, :glass_dark,
-                  side: s,
-                  thickness: 0.008,
-                  offset: glass_out(),
-                  step: 0.05,
-                  clip: window
-                ),
-              else: []
+          glass = if Cuts.window(van, "rear_doors"), do: rear_glass(van, r0, d1, s, glass_out(), 0.05), else: []
 
           handle = if s == 1, do: [Shape.box({0.05, -0.03, 1.12}, {0.2, -0.01, 1.16}, :black)], else: []
           {panel ++ handle, glass}
@@ -217,8 +216,110 @@ defmodule World.Doors.Van do
     |> add("glass", Kit.part(@station, "rear_door_glass", :glass, glass, [Kit.origin()]))
   end
 
-  # A door: its panel at the root, of the kind `:door` (the doors factory
-  # makes it, `World.Places.family_of/1`).
+  # --- The windows of the body ----------------------------------------------------------
+
+  @doc "The windshield: from its base at the cowl to its top."
+  def windshield(van) do
+    %{h: h} = van
+    w = van.make["openings"]["windshield"]
+    top = Cuts.windshield_top(van)
+
+    shapes =
+      case Detail.level() do
+        :near ->
+          for s <- [1, -1] do
+            Hull.shell(h, w["base"], top, :glass_dark,
+              side: s,
+              thickness: 0.008,
+              offset: -0.004,
+              step: 0.05,
+              clip: fn d -> Cuts.windshield(van, d) || [{:z_min, 9.0}] end
+            )
+          end
+
+        level ->
+          Hull.skin(h, w["base"], top, :glass_dark,
+            offset: %{mid: 0.01, far: 0.025}[level],
+            sides: 16,
+            step: 0.05,
+            clip: fn d ->
+              inset = Hull.half_width(h, d) - w["inset"]
+              [{:z_min, Hull.z_high(h, d) - 0.04}, {:x_max, inset}, {:x_min, -inset}]
+            end
+          )
+      end
+
+    window("windshield", Kit.part(@station, "windshield", :glass, List.flatten([shapes]), [Kit.origin()]), [])
+  end
+
+  @doc """
+  The window of the body at a side (1 the right, -1 the left), the window
+  `right` or `left` of the order: `{name, window}`, or nil.
+  """
+  def side(van, s) do
+    case Cuts.side_windows(van, s) do
+      [] ->
+        nil
+
+      [{d0, d1, c}] ->
+        planes = &Cuts.side_window(van, &1, d0, d1, c)
+
+        shapes =
+          case Detail.level() do
+            :near ->
+              Hull.shell(van.h, d0, d1, :glass_dark,
+                side: s,
+                thickness: 0.008,
+                offset: -0.004,
+                step: 0.05,
+                clip: fn d -> planes.(d) || [{:z_min, 9.0}] end
+              )
+
+            level ->
+              region(van, d0, d1, planes, s, level)
+          end
+
+        name = if s == 1, do: "window_right", else: "window_left"
+        sources = van.make["windows"]["sources"]
+
+        {name,
+         window(
+           name,
+           Kit.part(@station, name, :glass, List.flatten([shapes]), [Kit.origin()], sources: sources),
+           sources
+         )}
+    end
+  end
+
+  # The glass of a window on the closed body (the mid and far levels): a
+  # skin over the region of the window at a side.
+  defp region(van, d0, d1, planes, s, level) do
+    [
+      Hull.skin(van.h, d0, d1, :glass_dark,
+        offset: 0.006,
+        sides: 8,
+        step: %{mid: 0.1, far: 0.3}[level],
+        clip: fn d -> Kit.mirror(planes.(d) || [{:z_min, 9.0}], s) end
+      )
+    ]
+  end
+
+  # The glass of a rear door at a side.
+  defp rear_glass(van, r0, d1, s, offset, step) do
+    Hull.shell(van.h, r0, d1, :glass_dark,
+      side: s,
+      thickness: 0.008,
+      offset: offset,
+      step: step,
+      clip: &Cuts.rear_window(van, &1)
+    )
+  end
+
+  # A window: its glass at the root, of the kind `:window`.
+  defp window(name, glass, sources), do: Assembly.new(name, glass, root: "glass", kind: :window, sources: sources)
+
+  # A door: its panel at the root, of the kind `:door` (the openings
+  # factory makes it, `World.Places.family_of/1`).
   defp door(name, panel, sources), do: Assembly.new(name, panel, root: "panel", kind: :door, sources: sources)
 
   defp add(door, name, part), do: Assembly.add(door, name, part, at: "origin", port: "origin")

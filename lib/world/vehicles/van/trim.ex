@@ -1,17 +1,14 @@
 defmodule World.Vehicles.Van.Trim do
   @moduledoc """
   The fourth station of the line of a van (`World.Vehicles.Van`), after
-  the paint: the glass in the openings of the body, the black plastic,
-  the lamps, the grille, the small parts, and inside the dash and the
-  seats.
-
-  At the near level the glass is in its opening, flush with the body;
-  at the mid and far levels it is on the closed body, and at the far
-  level the glass of the doors is here too (the doors have no mesh).
+  the paint: the windows from the openings factory (the windshield and
+  the windows of the body, `World.Openings.Van`), the black plastic, the
+  lamps, the grille, the small parts, and inside the dash and the seats.
   """
   alias World.{Assembly, Detail, Frame, Shape}
   alias World.Furniture.Seats
   alias World.Vehicles.Hull
+  alias World.Openings.Van, as: OpeningsFactory
   alias World.Vehicles.Van.{Kit, Openings}
 
   @station "trim"
@@ -20,10 +17,19 @@ defmodule World.Vehicles.Van.Trim do
   def fit(asm, van) do
     asm
     |> Assembly.add("trim", plastic(van), at: "origin", port: "origin")
-    |> Assembly.add("glass", glass(van), at: "origin", port: "origin")
+    |> windows(van)
     |> Assembly.add("lamps", lamps(van), at: "origin", port: "origin")
     |> Assembly.add("grille", grille(van), at: "origin", port: "origin")
     |> near(van)
+  end
+
+  # The windshield and the windows of the body, from the openings factory.
+  defp windows(asm, van) do
+    sides = for s <- [1, -1], w = OpeningsFactory.side(van, s), do: w
+
+    Enum.reduce([{"windshield", OpeningsFactory.windshield(van)} | sides], asm, fn {name, w}, asm ->
+      Assembly.add(asm, name, w, at: "origin", port: "origin")
+    end)
   end
 
   defp near(asm, van) do
@@ -35,118 +41,6 @@ defmodule World.Vehicles.Van.Trim do
     else
       asm
     end
-  end
-
-  # --- The glass --------------------------------------------------------------------------
-
-  # The windshield, and the windows of the body behind the cab. At the far
-  # level, also the windows of the doors.
-  defp glass(van) do
-    shapes =
-      case Detail.level() do
-        :near -> flush(van)
-        level -> on_body(van, level)
-      end
-
-    Kit.part(@station, "glass_transit", :glass, shapes, [Kit.origin()],
-      sources: if(van.glass == [], do: [], else: van.make["windows"]["sources"])
-    )
-  end
-
-  defp flush(van) do
-    %{h: h} = van
-    w = van.make["openings"]["windshield"]
-
-    windshield =
-      for s <- [1, -1] do
-        Hull.shell(h, w["base"], Openings.windshield_top(van), :glass_dark,
-          side: s,
-          thickness: 0.008,
-          offset: -0.004,
-          step: 0.05,
-          clip: fn d -> Openings.windshield(van, d) || [{:z_min, 9.0}] end
-        )
-      end
-
-    windows =
-      for s <- [1, -1], {d0, d1, c} <- Openings.side_windows(van, s) do
-        Hull.shell(h, d0, d1, :glass_dark,
-          side: s,
-          thickness: 0.008,
-          offset: -0.004,
-          step: 0.05,
-          clip: fn d -> Openings.side_window(van, d, d0, d1, c) || [{:z_min, 9.0}] end
-        )
-      end
-
-    List.flatten(windshield ++ windows)
-  end
-
-  defp on_body(van, level) do
-    %{h: h} = van
-    w = van.make["openings"]["windshield"]
-    step = %{mid: 0.1, far: 0.3}[level]
-
-    windshield =
-      Hull.skin(h, w["base"], Openings.windshield_top(van), :glass_dark,
-        offset: %{mid: 0.01, far: 0.025}[level],
-        sides: 16,
-        step: 0.05,
-        clip: fn d ->
-          inset = Hull.half_width(h, d) - w["inset"]
-          [{:z_min, Hull.z_high(h, d) - 0.04}, {:x_max, inset}, {:x_min, -inset}]
-        end
-      )
-
-    region = fn d0, d1, planes, s ->
-      Hull.skin(h, d0, d1, :glass_dark,
-        offset: 0.006,
-        sides: 8,
-        step: step,
-        clip: fn d -> Kit.mirror(planes.(d) || [{:z_min, 9.0}], s) end
-      )
-    end
-
-    windows =
-      for s <- [1, -1],
-          {d0, d1, c} <- Openings.side_windows(van, s),
-          do: region.(d0, d1, &Openings.side_window(van, &1, d0, d1, c), s)
-
-    doors =
-      if level == :far do
-        {d0, d1} = Openings.front_door_span(van)
-        cab = for s <- [1, -1], do: region.(d0, d1, &Openings.door_window(van, &1), s)
-
-        slider =
-          case Openings.slider_window(van) do
-            nil -> []
-            {w0, w1, c} -> [region.(w0, w1, &Openings.side_window(van, &1, w0, w1, c), 1)]
-          end
-
-        cab ++ slider ++ rear_glass(van)
-      else
-        []
-      end
-
-    [windshield | windows ++ doors]
-  end
-
-  # The glass of the rear doors on the closed body (the far level).
-  defp rear_glass(van) do
-    %{h: h} = van
-    {r0, _, _, _} = Openings.rear(van)
-    {_, d1} = Hull.span(h)
-
-    for s <- [1, -1], Openings.window(van, "rear_doors") do
-      Hull.shell(h, r0, d1, :glass_dark,
-        side: s,
-        thickness: 0.008,
-        offset: 0.008,
-        step: 0.1,
-        clip: &Openings.rear_window(van, &1)
-      )
-    end
-    |> List.flatten()
   end
 
   # --- The black plastic ------------------------------------------------------------------

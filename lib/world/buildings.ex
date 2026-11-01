@@ -23,7 +23,7 @@ defmodule World.Buildings do
   """
   alias World.{Assembly, Frame, Kit, Part, Shape, Vec}
   alias World.Materials.{Construction, Stock}
-  import Kit, only: [inch: 1, same: 4]
+  import Kit, only: [inch: 1]
 
   @o Part.port("o", {0, 0, 0}, {0, 0, 1}, {0, 1, 0})
 
@@ -461,65 +461,6 @@ defmodule World.Buildings do
     end
   end
 
-  # --- Windows (the doors come from the doors factory, `World.Doors`) ----------------------
-
-  @doc """
-  A window of `w` by `h` (the rough opening) for a wall of `depth`: a
-  frame of vinyl and a casement sash that opens out (-y), or a fixed
-  pane. Its origin is at the bottom left of the rough opening.
-  """
-  def window(name, w, h, depth, kind \\ :casement) do
-    f = 0.05
-    {y0, y1} = {0.005, 0.085}
-
-    # The frame, and the stool under it on the inside.
-    frame = [
-      Shape.box({0.006, y0, 0.006}, {f, y1, h - 0.006}, :white),
-      Shape.box({w - f, y0, 0.006}, {w - 0.006, y1, h - 0.006}, :white),
-      Shape.box({f, y0, 0.006}, {w - f, y1, f}, :white),
-      Shape.box({f, y0, h - f}, {w - f, y1, h - 0.006}, :white),
-      Shape.box({0.0, y1, 0.0}, {w, depth, 0.02}, :white)
-    ]
-
-    hinge_at = {f, y0 + 0.01, f}
-
-    sash_shapes = [
-      Shape.box({f, y0 + 0.01, f}, {f + 0.04, y0 + 0.05, h - f}, :white),
-      Shape.box({w - f - 0.04, y0 + 0.01, f}, {w - f, y0 + 0.05, h - f}, :white),
-      Shape.box({f + 0.04, y0 + 0.01, f}, {w - f - 0.04, y0 + 0.05, f + 0.04}, :white),
-      Shape.box({f + 0.04, y0 + 0.01, h - f - 0.04}, {w - f - 0.04, y0 + 0.05, h - f}, :white),
-      Shape.box({f + 0.04, y0 + 0.025, f + 0.04}, {w - f - 0.04, y0 + 0.035, h - f - 0.04}, :glass)
-    ]
-
-    base =
-      Assembly.new(
-        name,
-        Part.new("window_frame_#{round(w / 0.0254)}x#{round(h / 0.0254)}", :frame, frame, [@o],
-          params: %{"rough_opening" => [w, h]}
-        ),
-        root: "frame",
-        kind: :window,
-        sources: ["A vinyl window of #{round(w / 0.0254)} by #{round(h / 0.0254)} in (the rough opening)."]
-      )
-
-    sash =
-      Part.new("window_sash_#{round(w / 0.0254)}x#{round(h / 0.0254)}", :sash, sash_shapes, [
-        same("hinge", hinge_at, {0, 0, -1}, {0, 1, 0})
-      ])
-
-    if kind == :casement,
-      do:
-        Assembly.add(base, "sash_" <> name, sash,
-          at: Kit.same("hinge", hinge_at, {0, 0, -1}, {0, 1, 0}),
-          port: "hinge",
-          kind: :hinge,
-          role: :door,
-          limits: [0, 90]
-        ),
-      else:
-        Assembly.add(base, "sash_" <> name, sash, at: Kit.same("hinge", hinge_at, {0, 0, -1}, {0, 1, 0}), port: "hinge")
-  end
-
   # --- The houses ------------------------------------------------------------------------
 
   @doc """
@@ -590,7 +531,7 @@ defmodule World.Buildings do
           for item <- items do
             case item do
               {:door, x, w, h} ->
-                {ro_w, ro_h} = World.Doors.prehung_opening(w, h)
+                {ro_w, ro_h} = World.Openings.prehung_opening(w, h)
                 {:door, x - ro_w / 2, ro_w, 0.0, ro_h}
 
               {:window, x, w, h, sill} ->
@@ -606,8 +547,8 @@ defmodule World.Buildings do
 
             fill =
               case item do
-                {:door, _, w, h} -> World.Doors.prehung(n, w, h, thick)
-                {:window, _, w, h, _} -> window(n, w, h, thick)
+                {:door, _, w, h} -> World.Openings.prehung(n, w, h, thick)
+                {:window, _, w, h, _} -> World.Openings.window(n, w, h, thick)
               end
 
             Assembly.add(wall, n, fill, at: Part.port(n, {x, 0.0, z}, {0, 0, 1}, {0, 1, 0}), port: @o)
@@ -629,8 +570,8 @@ defmodule World.Buildings do
       {"brick_us_modular", &__MODULE__.brick_us/0},
       {"block_cmu_8in", &__MODULE__.block_cmu/0},
       {"roof_tile_clay", &__MODULE__.tile/0},
-      {"door_prehung_36x80", &World.Doors.prehung_sample/0},
-      {"window_casement_36x48", &__MODULE__.window_sample/0},
+      {"door_prehung_36x80", &World.Openings.prehung_sample/0},
+      {"window_casement_36x48", &World.Openings.window_sample/0},
       {"wall_brick_sample", &__MODULE__.wall_brick_sample/0},
       {"wall_cmu_sample", &__MODULE__.wall_cmu_sample/0},
       {"wall_stud_sample", &__MODULE__.wall_stud_sample/0},
@@ -652,9 +593,6 @@ defmodule World.Buildings do
 
   @doc "A clay roof tile (10 to the square meter)."
   def tile, do: single("roof_tile_clay", Construction.roof_tile())
-
-  @doc "A casement window of 36 by 48 in (the rough opening), for a wall of 2x4."
-  def window_sample, do: window("window_casement_36x48", inch(36), inch(48), inch(4.5))
 
   @doc "A wall of bricks of Việt Nam (one wythe, 110 mm): 2 m long, 1.5 m high, with a window."
   def wall_brick_sample,

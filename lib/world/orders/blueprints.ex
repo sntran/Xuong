@@ -494,7 +494,7 @@ defmodule World.Orders.Blueprints do
               ]
             ),
           doc:
-            "The windows behind the cab: a preset (cargo: none, the windows of the cab only; crew: the window of the second row at the left, the window of the sliding door and those of the rear doors; passenger: the windows all around) or a list. Each window has its place (at: left or right in a side of the body, slider in the sliding door, rear_doors in the rear doors; one window at a place) and its numbers; a number that the window does not give is that of the model. The doors factory makes the doors with their windows."
+            "The windows behind the cab: a preset (cargo: none, the windows of the cab only; crew: the window of the second row at the left, the window of the sliding door and those of the rear doors; passenger: the windows all around) or a list. Each window has its place (at: left or right in a side of the body, slider in the sliding door, rear_doors in the rear doors; one window at a place) and its numbers; a number that the window does not give is that of the model. The openings factory makes the windows and the doors with their windows."
         ),
         option("rows", :integer,
           default: nil,
@@ -541,7 +541,7 @@ defmodule World.Orders.Blueprints do
             )
           ],
           doc:
-            "The numbers of the doors over those of the model. The doors factory makes each door to its numbers. A door moves only a little from that of the model and stays in the body: a number out of its limits gives an error with the limits."
+            "The numbers of the doors over those of the model. The openings factory makes each door to its numbers. A door moves only a little from that of the model and stays in the body: a number out of its limits gives an error with the limits."
         ),
         option("engine_bay", :list,
           default: [],

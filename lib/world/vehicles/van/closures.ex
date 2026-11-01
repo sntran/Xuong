@@ -2,14 +2,14 @@ defmodule World.Vehicles.Van.Closures do
   @moduledoc """
   The second station of the line of a van (`World.Vehicles.Van`): the
   closures on their hinges and rails. The hood turns up at the front.
-  The doors come from the doors factory (`World.Doors.Van`):
+  The doors come from the openings factory (`World.Openings.Van`):
   each front door turns out on hinges at its front edge, with its window
   and its mirror; the sliding door at the right side slides back; the
   two rear doors turn out on hinges at their outer edges.
   """
   alias World.Assembly
   alias World.Vehicles.Hull
-  alias World.Doors
+  alias World.Openings, as: Factory
   alias World.Vehicles.Van.Kit
   @station "closures"
 
@@ -51,14 +51,14 @@ defmodule World.Vehicles.Van.Closures do
 
   # --- The doors -------------------------------------------------------------------------
 
-  # The doors come from the doors factory (`World.Doors.Van`):
+  # The doors come from the openings factory (`World.Openings.Van`):
   # each front door turns out on hinges at its front edge, the sliding
   # door slides back on its rail, the rear doors turn out on hinges at
   # their outer edges.
   defp front_doors(asm, van) do
     Enum.reduce([{"front_door_right", 1}, {"front_door_left", -1}], asm, fn {name, s}, asm ->
-      Assembly.add(asm, name, Doors.Van.front(van, s),
-        at: Doors.Van.front_hinge(van, s),
+      Assembly.add(asm, name, Factory.Van.front(van, s),
+        at: Factory.Van.front_hinge(van, s),
         port: "hinge",
         kind: :hinge,
         role: :door,
@@ -68,8 +68,8 @@ defmodule World.Vehicles.Van.Closures do
   end
 
   defp sliding_door(asm, van) do
-    Assembly.add(asm, "sliding_door", Doors.Van.sliding(van),
-      at: Doors.Van.slide(van),
+    Assembly.add(asm, "sliding_door", Factory.Van.sliding(van),
+      at: Factory.Van.slide(van),
       port: "slide",
       kind: :slide,
       role: :door,
@@ -79,8 +79,8 @@ defmodule World.Vehicles.Van.Closures do
 
   defp rear_doors(asm, van) do
     Enum.reduce([{"rear_door_right", 1}, {"rear_door_left", -1}], asm, fn {name, s}, asm ->
-      Assembly.add(asm, name, Doors.Van.rear(van, s),
-        at: Doors.Van.rear_hinge(van, s),
+      Assembly.add(asm, name, Factory.Van.rear(van, s),
+        at: Factory.Van.rear_hinge(van, s),
         port: "hinge",
         kind: :hinge,
         role: :door,

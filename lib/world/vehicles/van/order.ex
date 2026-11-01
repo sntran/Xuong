@@ -6,7 +6,7 @@ defmodule World.Vehicles.Van.Order do
   - `doors`: `front` (`back`, the edge behind the front axle; `top`),
     `sliding` (`from` and `to` behind the front axle; `top`) and `rear`
     (`height` of the opening over the floor), in meters. The doors
-    factory makes each door to these numbers (`World.Doors.Van`).
+    factory makes each door to these numbers (`World.Openings.Van`).
   - `windows`: a preset (`cargo`, `crew`, `passenger`) or a list of
     windows. Each window has its place (`at`: `left` and `right` in the
     sides of the body, `slider` in the sliding door, `rear_doors` in the

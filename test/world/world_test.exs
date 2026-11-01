@@ -226,8 +226,9 @@ defmodule World.WorldTest do
       assert Places.family_of(wheel) == :wheels and Places.family_of(seat) == :seats and
                Places.family_of(part.("x")) == nil
 
-      # A door of a vehicle comes from the doors factory.
-      assert Places.family_of(%{Assembly.new("door_x", part.("panel"), root: "panel") | kind: :door}) == :doors
+      # A door and a window come from the openings factory.
+      assert Places.family_of(%{Assembly.new("door_x", part.("panel"), root: "panel") | kind: :door}) == :openings
+      assert Places.family_of(%{Assembly.new("window_x", part.("glass"), root: "glass") | kind: :window}) == :openings
 
       plan = Plan.flat(van, family: :vehicles)
 

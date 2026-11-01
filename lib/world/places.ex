@@ -7,7 +7,7 @@ defmodule World.Places do
     its store (`World.Store`): the memory of the VM, an R2 bucket, or the
     catalog of the release (`catalog/3`).
   - A **factory** makes one family of things: `:materials`, `:frames`,
-    `:houses`, `:wheels`, `:seats`, `:doors`, `:vehicles`, `:appliances`,
+    `:houses`, `:wheels`, `:seats`, `:openings`, `:vehicles`, `:appliances`,
     `:clothes`, `:people`.
   - A **supplier** gives a part that the world cannot make.
   - A **site** is where a delivery ends: a project of the owner.
@@ -15,7 +15,7 @@ defmodule World.Places do
   alias World.{Stock, Store}
 
   @kinds [:warehouse, :factory, :supplier, :site]
-  @families [:materials, :frames, :houses, :wheels, :seats, :doors, :vehicles, :appliances, :clothes, :people]
+  @families [:materials, :frames, :houses, :wheels, :seats, :openings, :vehicles, :appliances, :clothes, :people]
 
   defmodule Place do
     @moduledoc "A place: its name, its kind, its position `{x, y}` on the yard, its family (a factory) and its stock (a warehouse)."
@@ -29,12 +29,12 @@ defmodule World.Places do
   def families, do: @families
 
   # The family of an assembly by its kind: the factory that makes it.
-  @family_of_kind %{wheel: :wheels, seat: :seats, door: :doors, house: :houses}
+  @family_of_kind %{wheel: :wheels, seat: :seats, door: :openings, window: :openings, house: :houses}
 
   @doc """
   The family of an item: the factory that makes it (`:wheels` for a
-  wheel, `:seats` for a seat or a bench, `:doors` for a door of a
-  vehicle, `:houses` for a house or a
+  wheel, `:seats` for a seat or a bench, `:openings` for a door or a
+  window, `:houses` for a house or a
   building of the world), or `nil` for an item that the factory of its
   parent makes.
   """

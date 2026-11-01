@@ -30,16 +30,18 @@ defmodule World.RunTest do
              Enum.find(van_events, &(&1.kind == "departed" and &1.data["to"] == "vehicles"))
 
     # The four wheels come from the wheel factory, the two seats from the
-    # seat factory and the five doors from the doors factory (orders of
-    # their own), each by a drive of the truck of that factory to the
-    # vehicle factory.
-    doors = Map.new(~w(front_door_right front_door_left sliding_door rear_door_right rear_door_left), &{&1, 1})
-    assert result.plan.ordered == Map.merge(%{"wheel_car_235_65R16" => 4, "driver" => 1, "passenger" => 1}, doors)
+    # seat factory, and the five doors and the windshield from the
+    # openings factory (orders of their own), each by a drive of the
+    # truck of that factory to the vehicle factory.
+    openings =
+      Map.new(~w(front_door_right front_door_left sliding_door rear_door_right rear_door_left windshield), &{&1, 1})
+
+    assert result.plan.ordered == Map.merge(%{"wheel_car_235_65R16" => 4, "driver" => 1, "passenger" => 1}, openings)
 
     for {sub, factory, truck, count} <- [
           {"van-1/wheels", "wheels", "wheel_truck", 4},
           {"van-1/seats", "seats", "seat_truck", 2},
-          {"van-1/doors", "doors", "door_truck", 5}
+          {"van-1/openings", "openings", "opening_truck", 6}
         ] do
       ordered = Enum.find(van_events, &(&1.kind == "part_ordered" and &1.data["order"] == sub))
       assert ordered.data["factory"] == factory
@@ -131,12 +133,12 @@ defmodule World.RunTest do
     assert %{kind: "build_done", data: %{"from" => "factory"}} = List.last(events)
     assert length(result.plan.tasks) > 300
 
-    # Its door comes from the doors factory, by the truck of that factory.
-    assert Enum.any?(build, &(&1.kind == "part_ordered" and &1.data["factory"] == "doors"))
+    # Its door comes from the openings factory, by the truck of that factory.
+    assert Enum.any?(build, &(&1.kind == "part_ordered" and &1.data["factory"] == "openings"))
 
     assert Enum.any?(
              events,
-             &(&1.kind == "departed" and &1.data["vehicle"] == "door_truck" and &1.data["to"] == "houses")
+             &(&1.kind == "departed" and &1.data["vehicle"] == "opening_truck" and &1.data["to"] == "houses")
            )
 
     # Each event of the storekeeper tells how full the store is.

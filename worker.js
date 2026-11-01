@@ -12,8 +12,16 @@ import app from './edge.com' with { type: 'bytes' };
 import { Beam as BeamObject, serve } from 'beam.com';
 import version from './site/version.json';
 import { handler } from './handler.js';
+import { orderStore } from './order_store.js';
 
-export class Beam extends BeamObject {}
+// The VM gets one port, a plain object with port(), so it needs no other
+// Worker: /env/ORDER_STORE, the store of the orders with the R2 bucket
+// ORDERS (order_store.js, World.Orders.Store).
+export class Beam extends BeamObject {
+  constructor(ctx, env) {
+    super(ctx, { ...env, ORDER_STORE: orderStore(env.ORDERS) });
+  }
+}
 
 // The object of a request: one of 4 builders, from the first digit of
 // the hash of the order, so the builds of one order go to one builder.

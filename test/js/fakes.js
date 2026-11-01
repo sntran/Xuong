@@ -26,20 +26,44 @@ export function bucket() {
   };
 }
 
-// A VM that checks an order with a blueprint "box", and counts the builds.
+// A VM that checks an order with a blueprint "box", keeps the orders of
+// /orders (by their hash), answers /mcp, and counts the builds.
 export function vm() {
   const calls = [];
+  const orders = new Map();
   const fn = async (request, hash) => {
     const url = new URL(request.url);
     calls.push(url.pathname + url.search);
+    fn.last = request;
     if (url.pathname === '/build') assert.equal(hash, HASH);
     if (url.pathname === '/blueprints') return Response.json(BLUEPRINTS);
-    const order = await request.json();
+    if (url.pathname === '/mcp') {
+      if (request.method !== 'POST') return Response.json({ jsonrpc: '2.0', id: null, error: { code: -32000 } }, { status: 405, headers: { allow: 'POST' } });
+      const message = await request.json();
+      if (!('id' in message)) return new Response('', { status: 202 });
+      return Response.json({ jsonrpc: '2.0', id: message.id, result: { version: request.headers.get('mcp-protocol-version') } });
+    }
+    if (url.searchParams.has('hash')) {
+      if (!orders.has(url.searchParams.get('hash'))) return Response.json({ errors: [{ path: '', message: 'no such order' }] }, { status: 404 });
+      return new Response(`${url.searchParams.get('level')} ${url.searchParams.get('file')}`);
+    }
+    let order;
+    try {
+      order = await request.json();
+    } catch {
+      return Response.json({ errors: [{ path: '', message: 'the body is not JSON' }] }, { status: 400 });
+    }
     if (order.blueprint !== 'box') return Response.json({ errors: [{ path: 'blueprint', message: 'no' }] }, { status: 422 });
     if (url.pathname === '/check') return Response.json({ hash: HASH, order: { ...order, full: true } });
+    if (url.pathname === '/orders') {
+      orders.set(HASH, order);
+      const origin = request.headers.get('x-world-origin');
+      return Response.json({ hash: HASH, order, files: { glb: `${origin}/o/${HASH}.glb` }, replay: `${origin}/replay.html?order=${HASH}` });
+    }
     if (order.joints?.bad) return Response.json({ errors: [{ path: 'joints.bad', message: 'no' }] }, { status: 422 });
     return new Response(`${url.searchParams.get('level')} ${url.searchParams.get('file')}`);
   };
   fn.calls = calls;
+  fn.orders = orders;
   return fn;
 }

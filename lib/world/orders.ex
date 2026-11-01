@@ -126,6 +126,34 @@ defmodule World.Orders do
   @doc "The files of an order."
   def files, do: @files
 
+  # The URL of each file of a placed order: the suffix of /o/HASH (the
+  # names that the Worker serves, handler.js), the level and the file.
+  @urls ~w(glb mid.glb far.glb parts.json receipt.json log.json replay.glb)
+
+  @doc """
+  Place an order (`POST /orders`, and the tool `place_order` of
+  `World.MCP`): check it, and keep the full order in the store
+  (`World.Orders.Store`), so that its files can build later at their
+  URLs. `origin` is the start of the URLs (`https://world.mkfifo.com`).
+
+  Gives `{:ok, %{"hash", "order", "files", "replay"}}`, `{:error,
+  errors}` as `check/1`, or `{:error, :store}` when the store failed.
+  """
+  def place(order, origin) do
+    with {:ok, full} <- check(order) do
+      hash = hash(full)
+
+      case World.Orders.Store.put(hash, encode(full)) do
+        :ok ->
+          files = Map.new(@urls, &{&1, "#{origin}/o/#{hash}.#{&1}"})
+          {:ok, %{"hash" => hash, "order" => full, "files" => files, "replay" => "#{origin}/replay.html?order=#{hash}"}}
+
+        :error ->
+          {:error, :store}
+      end
+    end
+  end
+
   @doc """
   Build a file of an order at a level (`"near"`, `"mid"` or `"far"`). The
   files (`files/0`):

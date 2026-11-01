@@ -87,6 +87,57 @@ defmodule World.ServiceTest do
     assert [%{status: 200}, %{status: 200}] = Task.await_many(builds, 60_000)
   end
 
+  test "POST /orders keeps the full order and gives the URLs of its files, from x-world-origin" do
+    conn =
+      conn(:post, "/orders", @strut)
+      |> Plug.Conn.put_req_header("x-world-origin", "https://world.mkfifo.com")
+      |> Service.call(Service.init([]))
+
+    assert conn.status == 200
+    %{"hash" => hash, "files" => files, "replay" => replay} = json(conn)
+    assert files["mid.glb"] == "https://world.mkfifo.com/o/#{hash}.mid.glb"
+    assert replay == "https://world.mkfifo.com/replay.html?order=#{hash}"
+
+    # With no x-world-origin, the URLs start with this server.
+    assert json(call(:post, "/orders", @strut))["files"]["glb"] == "http://www.example.com:80/o/#{hash}.glb"
+
+    assert call(:post, "/orders", ~s({"blueprint": "strut"})).status == 422
+    assert call(:post, "/orders", "nope").status == 400
+  end
+
+  test "POST /build of a hash: 404 for an order that is not in the store, or for a wrong hash" do
+    assert json(call(:post, "/build?hash=ffffffffffffffffffffffffffffffff", ""))["errors"] ==
+             [%{"path" => "", "message" => "no such order: send it to POST /orders"}]
+
+    assert call(:post, "/build?hash=../../x", "").status == 404
+  end
+
+  test "/mcp: one JSON-RPC message for each POST, 202 for a notification, 405 for the other methods" do
+    ping = ~s({"jsonrpc":"2.0","id":1,"method":"ping"})
+    conn = call(:post, "/mcp", ping)
+    assert conn.status == 200
+    assert json(conn) == %{"jsonrpc" => "2.0", "id" => 1, "result" => %{}}
+    assert Plug.Conn.get_resp_header(conn, "content-type") == ["application/json"]
+
+    old =
+      conn(:post, "/mcp", ping)
+      |> Plug.Conn.put_req_header("mcp-protocol-version", "1999-01-01")
+      |> Service.call(Service.init([]))
+
+    assert old.status == 400
+
+    notified = call(:post, "/mcp", ~s({"jsonrpc":"2.0","method":"notifications/initialized"}))
+    assert {notified.status, notified.resp_body} == {202, ""}
+
+    assert call(:post, "/mcp", String.duplicate(" ", 1_100_000)).status == 413
+
+    for method <- [:get, :delete] do
+      conn = call(method, "/mcp")
+      assert conn.status == 405
+      assert Plug.Conn.get_resp_header(conn, "allow") == ["POST"]
+    end
+  end
+
   test "a page that is not there" do
     assert call(:get, "/nope").status == 404
   end

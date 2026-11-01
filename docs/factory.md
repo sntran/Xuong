@@ -246,8 +246,9 @@ and no session (`GET` and `DELETE` give 405), and no sign-in, as for
 The result of a tool has the data as JSON text and as structured
 content. A wrong order is a result with `isError` and the errors, each
 with its path and its rule, so that the client can correct the order
-and try again. A VM that stops is a result with `isError` too. The
-factory builds each file at its first `GET`, as for `POST /orders`.
+and try again. A store of the orders that fails is a result with
+`isError` too. The factory builds each file at its first `GET`, as for
+`POST /orders`.
 
 To add the server to an MCP client, give it the URL
 `https://world.mkfifo.com/mcp` with the transport "HTTP" (or
@@ -257,8 +258,9 @@ To add the server to an MCP client, give it the URL
 {"mcpServers": {"world": {"type": "http", "url": "https://world.mkfifo.com/mcp"}}}
 ```
 
-`mcp.js` is the server, and `handler.js` gives it the VM and the bucket.
-`test/js/mcp.test.js` has its tests.
+The server is `World.MCP` in the VM, at `POST /mcp` of `World.Service`.
+The Worker sends each request of `/mcp` to the VM with no change, and
+gives it the start of the URLs (the header `x-world-origin`).
 
 ## The line of a van
 
@@ -293,6 +295,22 @@ version of the blueprint (`van@2`): the old version stays.
 |---|---|
 | A model of the catalog | CI builds it natively (`mix world.build --check`), and the files are in the repository. The Worker serves them as static files: no build at a request. |
 | An order at a request | The VM of World (beam.com, WebAssembly) in a Durable Object of the Worker builds it (`worker.js`, `handler.js`, `World.Service`). The file goes into R2 with a key of the commit of the deploy and the hash of the order, so the next request reads it from R2, and a new deploy builds it again. |
+
+The VM has the orders: their check, their store and the MCP server
+(`World.Service`, `World.Orders.place/2`, `World.MCP`). `POST /orders`
+and the tool `place_order` keep the full order in R2 as
+`orders/HASH.json`, through a port of the VM (`/env/ORDER_STORE`,
+`order_store.js`, `World.Orders.Store`). On this computer and in the
+tests, `scripts/order-store.mjs` runs the same code with a folder
+(`WORLD_ORDER_DIR`, `tmp/orders` by default).
+
+The Worker (`handler.js`) keeps the files that the VM built
+(`builds/COMMIT/HASH.LEVEL.FILE` in R2): a file that R2 has goes out
+with no request to the VM, so a cold VM, or a VM that builds a big
+order, does not stop it. For a file that R2 does not have, the Worker
+asks the VM to build it: `POST /build?hash=HASH` for an order of
+`POST /orders` (the VM reads the order from its store), or the order in
+the body for `/m/`.
 
 The VM at the edge, measured with Node.js 25 and the runtime of
 beam.com 0.1.0-rc.6 (the time of one build, and the peak of the memory

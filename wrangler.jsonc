@@ -22,7 +22,9 @@
   // the first deploy: npx wrangler r2 bucket create world
   "r2_buckets": [{ "binding": "ORDERS", "bucket_name": "world" }],
   // WORLD_SERVER starts the HTTP server of the VM (World.Application).
-  // -Mea min: the smallest allocators, for the 128 MB of an isolate.
-  "vars": { "WORLD_SERVER": "true", "BEAM_ERL_FLAGS": "-Mea min" },
+  // WORLD_ORDER_STORE: the port of the store of the orders (worker.js,
+  // World.Orders.Store). -Mea min: the smallest allocators, for the
+  // 128 MB of an isolate.
+  "vars": { "WORLD_SERVER": "true", "WORLD_ORDER_STORE": "/env/ORDER_STORE", "BEAM_ERL_FLAGS": "-Mea min" },
   "observability": { "enabled": true }
 }

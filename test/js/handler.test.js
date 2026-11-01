@@ -27,20 +27,22 @@ test('an order from a URL', () => {
   assert.deepEqual(reach.joints, { elbow_l: 90 });
 });
 
-test('POST /orders keeps the full order and gives the URLs of its files', async () => {
-  const env = { ORDERS: bucket() };
-  const r = await handler(req('/orders', { method: 'POST', body: JSON.stringify({ blueprint: 'box' }) }), env, { vm: vm(), commit: 'c1' });
+test('POST /orders goes to the VM, with the origin of the URLs', async () => {
+  const v = vm();
+  const r = await handler(req('/orders', { method: 'POST', headers: { 'content-type': 'application/json', 'x-world-origin': 'https://evil.example' }, body: JSON.stringify({ blueprint: 'box' }) }), { ORDERS: bucket() }, { vm: v, commit: 'c1' });
   assert.equal(r.status, 200);
   assert.equal(r.headers.get('access-control-allow-origin'), '*');
+  assert.equal(r.headers.get('content-type'), 'application/json');
   const body = await r.json();
   assert.equal(body.hash, HASH);
-  assert.equal(body.files['mid.glb'], `https://world.mkfifo.com/o/${HASH}.mid.glb`);
-  assert.equal(body.files['log.json'], `https://world.mkfifo.com/o/${HASH}.log.json`);
+  // The Worker gives the origin, not the client.
+  assert.equal(body.files.glb, `https://world.mkfifo.com/o/${HASH}.glb`);
   assert.equal(body.replay, `https://world.mkfifo.com/replay.html?order=${HASH}`);
-  assert.ok(env.ORDERS.items.has(`orders/${HASH}.json`));
+  assert.equal(v.last.headers.get('content-type'), 'application/json');
+  assert.ok(v.orders.has(HASH));
 });
 
-test('POST /orders gives the errors of a wrong order, and 400 for a body that is not JSON', async () => {
+test('POST /orders gives the errors of the VM: 422 for a wrong order, 400 for a body that is not JSON', async () => {
   const env = { ORDERS: bucket() };
   const wrong = await handler(req('/orders', { method: 'POST', body: '{"blueprint":"x"}' }), env, { vm: vm(), commit: 'c1' });
   assert.equal(wrong.status, 422);
@@ -49,10 +51,37 @@ test('POST /orders gives the errors of a wrong order, and 400 for a body that is
   assert.equal(bad.status, 400);
 });
 
+test('/mcp goes to the VM: the body, the version of the protocol, 202 with no body, and 405', async () => {
+  const env = { ORDERS: bucket() };
+  const v = vm();
+  const call = (body, headers = {}) => handler(req('/mcp', { method: 'POST', headers, body: JSON.stringify(body) }), env, { vm: v, commit: 'c1' });
+
+  const ping = await call({ jsonrpc: '2.0', id: 1, method: 'ping' }, { 'mcp-protocol-version': '2025-06-18', cookie: 'a=b' });
+  assert.equal(ping.status, 200);
+  assert.equal(ping.headers.get('access-control-allow-origin'), '*');
+  assert.deepEqual(await ping.json(), { jsonrpc: '2.0', id: 1, result: { version: '2025-06-18' } });
+  assert.equal(v.last.headers.get('x-world-origin'), 'https://world.mkfifo.com');
+  assert.equal(v.last.headers.get('cookie'), null);
+
+  const note = await call({ jsonrpc: '2.0', method: 'notifications/initialized' });
+  assert.equal(note.status, 202);
+  assert.equal(await note.text(), '');
+
+  for (const method of ['GET', 'DELETE']) {
+    const r = await handler(req('/mcp', { method }), env, { vm: v, commit: 'c1' });
+    assert.equal(r.status, 405);
+    assert.equal(r.headers.get('allow'), 'POST');
+  }
+
+  const options = await handler(req('/mcp', { method: 'OPTIONS' }), env, { vm: v, commit: 'c1' });
+  assert.equal(options.status, 204);
+  assert.match(options.headers.get('access-control-allow-headers'), /mcp-protocol-version/);
+});
+
 test('GET /o/ builds a file one time, then serves it from R2, with an ETag', async () => {
   const env = { ORDERS: bucket() };
   const v = vm();
-  await env.ORDERS.put(`orders/${HASH}.json`, JSON.stringify({ blueprint: 'box' }));
+  v.orders.set(HASH, { blueprint: 'box' });
   const first = await handler(req(`/o/${HASH}.mid.glb`), env, { vm: v, commit: 'c1' });
   assert.equal(first.status, 200);
   assert.equal(first.headers.get('content-type'), 'model/gltf-binary');
@@ -62,7 +91,7 @@ test('GET /o/ builds a file one time, then serves it from R2, with an ETag', asy
 
   const second = await handler(req(`/o/${HASH}.mid.glb`), env, { vm: v, commit: 'c1' });
   assert.equal(await second.text(), 'mid glb');
-  assert.equal(v.calls.filter((c) => c.startsWith('/build')).length, 1);
+  assert.deepEqual(v.calls.filter((c) => c.startsWith('/build')), [`/build?level=mid&file=glb&hash=${HASH}`]);
 
   const same = await handler(req(`/o/${HASH}.mid.glb`, { headers: { 'if-none-match': etag } }), env, { vm: v, commit: 'c1' });
   assert.equal(same.status, 304);
@@ -75,7 +104,7 @@ test('GET /o/ builds a file one time, then serves it from R2, with an ETag', asy
   assert.equal(await receipt.text(), 'near receipt');
 });
 
-test('GET /o/ of an order that is not in R2, or of a wrong name, is 404', async () => {
+test('GET /o/ of an order that the VM does not have, or of a wrong name, is 404', async () => {
   const env = { ORDERS: bucket() };
   assert.equal((await handler(req(`/o/${HASH}.glb`), env, { vm: vm(), commit: 'c1' })).status, 404);
   assert.equal((await handler(req('/o/xyz.glb'), env, { vm: vm(), commit: 'c1' })).status, 404);

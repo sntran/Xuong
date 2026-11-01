@@ -1,22 +1,25 @@
 // The routes of the factory that are not static files (docs/factory.md,
 // "The URLs"). The static files of site/ (the catalog, the review page)
-// go out before the Worker runs. handler() takes:
+// go out before the Worker runs. The VM of World (World.Service) has the
+// orders, their store and the MCP server; this file keeps the files that
+// the VM built, so that a file goes out of R2 with no VM. handler() takes:
 //
-// - vm(request, hash): the VM of World (World.Service): /blueprints,
-//   /check, /build. The hash of the order, when there is one, chooses
-//   the builder;
-// - env.ORDERS: the R2 bucket. orders/HASH.json is a full order, and
-//   builds/COMMIT/FILE is a file that the VM built at the commit COMMIT;
+// - vm(request, hash): the VM of World. The hash of the order, when there
+//   is one, chooses the builder;
+// - env.ORDERS: the R2 bucket. builds/COMMIT/FILE is a file that the VM
+//   built at the commit COMMIT. The VM keeps the full orders in the same
+//   bucket (orders/HASH.json, World.Orders.Store);
 // - commit: the commit of the deploy (site/version.json). A new deploy
 //   builds each file again at its first request, so a correction of
 //   World reaches each order.
 //
 // The routes:
 //
-// - GET /blueprints: the blueprints and their options.
-// - POST /orders: an order in JSON. 200 with the hash, the full order,
-//   the URLs of its files and the URL of its replay page; 422 with the
-//   errors.
+// - GET /blueprints: the blueprints and their options (the VM).
+// - POST /orders: an order in JSON (the VM). 200 with the hash, the full
+//   order, the URLs of its files and the URL of its replay page; 422
+//   with the errors.
+// - /mcp: the MCP server (the VM, World.MCP).
 // - GET /o/HASH.glb, .mid.glb, .far.glb, .parts.json, .receipt.json,
 //   .log.json, .replay.glb: the files of an order of POST /orders. The
 //   people of the world build the model (World.Run): the log tells what
@@ -25,14 +28,10 @@
 //   %23rrggbb&joint.NAME=DEGREES&target.LIMB=X,Y,Z: an order in the URL. A list is
 //   VALUE,VALUE, and OPTION.FIELD=VALUE is a field of an object.
 //
-// When the VM stops (an order that needs more memory than the edge has),
-// the answer is 503 with the errors in JSON, and the next request starts
-// the VM again.
-//
-// - POST /mcp: the MCP server (mcp.js). An MCP client of another
-//   project finds the blueprints, checks an order and places it, as
-//   with POST /orders.
-import { mcp } from './mcp.js';
+// The Worker gives the VM the header x-world-origin (the start of the
+// URLs of an order). When the VM stops (an order that needs more memory
+// than the edge has), the answer is 503 with the errors in JSON, and the
+// next request starts the VM again.
 
 const CACHE = 'public, max-age=300, stale-while-revalidate=86400';
 
@@ -52,7 +51,7 @@ const HASH = /^[0-9a-f]{32}$/;
 const headers = (extra = {}) => ({
   'access-control-allow-origin': '*',
   'access-control-allow-methods': 'GET, POST, OPTIONS',
-  'access-control-allow-headers': 'content-type',
+  'access-control-allow-headers': 'content-type, accept, mcp-protocol-version, mcp-session-id, last-event-id',
   ...extra,
 });
 
@@ -93,24 +92,27 @@ async function check(vm, order) {
   return { status: r.status, body: await r.json() };
 }
 
-// An order of POST /orders and of the MCP server: the check, then the
-// full order into R2, and the URLs of its files.
-async function place(env, vm, origin, order) {
-  const { status, body } = await check(vm, order);
-  if (status !== 200) return { status, body };
-  await env.ORDERS.put(`orders/${body.hash}.json`, JSON.stringify(body.order), { httpMetadata: { contentType: 'application/json' } });
-  const files = Object.fromEntries(FILES.map(([ext]) => [ext.slice(1), `${origin}/o/${body.hash}${ext}`]));
-  const replay = `${origin}/replay.html?order=${body.hash}`;
-  return { status, body: { hash: body.hash, order: body.order, files, replay } };
+// A request of the client to the VM, with its method, its body, the
+// headers that the VM reads, and the origin of the URLs.
+async function forward(request, vm, origin, path) {
+  const keep = ['content-type', 'mcp-protocol-version'].filter((name) => request.headers.has(name));
+  const ask = new Headers(keep.map((name) => [name, request.headers.get(name)]));
+  ask.set('x-world-origin', origin);
+  const body = request.method === 'GET' || request.method === 'HEAD' ? undefined : await request.arrayBuffer();
+  const r = await vm(new Request(`http://vm${path}`, { method: request.method, headers: ask, body }));
+  const extra = Object.fromEntries(['content-type', 'allow'].filter((name) => r.headers.has(name)).map((name) => [name, r.headers.get(name)]));
+  return new Response(r.status === 202 ? null : r.body, { status: r.status, headers: headers(extra) });
 }
 
-// A file of a full order: from R2, else from the VM (then into R2).
+// A file of an order: from R2, else from the VM (then into R2). order is
+// the full order, or null for an order of POST /orders, which the VM
+// reads from its store by the hash.
 async function file(request, env, vm, commit, hash, order, [, level, kind, type]) {
   const key = `builds/${commit}/${hash}.${level}.${kind}`;
   let object = await env.ORDERS.get(key);
   if (!object) {
-    const url = `http://vm/build?level=${level}&file=${kind}`;
-    const r = await vm(new Request(url, { method: 'POST', body: JSON.stringify(order) }), hash);
+    const url = `http://vm/build?level=${level}&file=${kind}${order ? '' : `&hash=${hash}`}`;
+    const r = await vm(new Request(url, { method: 'POST', body: order ? JSON.stringify(order) : undefined }), hash);
     if (r.status !== 200) return new Response(r.body, { status: r.status, headers: headers({ 'content-type': 'application/json' }) });
     await env.ORDERS.put(key, await r.arrayBuffer(), { httpMetadata: { contentType: type } });
     object = await env.ORDERS.get(key);
@@ -133,15 +135,6 @@ async function route(request, env, { vm, commit }) {
   const url = new URL(request.url);
   const path = url.pathname;
 
-  if (path === '/mcp') {
-    return mcp(request, {
-      commit,
-      blueprints: async () => (await vm(new Request('http://vm/blueprints'))).json(),
-      check: (order) => check(vm, order),
-      place: (order) => place(env, vm, url.origin, order),
-    });
-  }
-
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: headers({ 'access-control-max-age': '86400' }) });
 
   if (path === '/blueprints' && request.method === 'GET') {
@@ -149,25 +142,16 @@ async function route(request, env, { vm, commit }) {
     return new Response(r.body, { status: r.status, headers: headers({ 'content-type': 'application/json', 'cache-control': CACHE }) });
   }
 
-  if (path === '/orders' && request.method === 'POST') {
-    let order;
-    try {
-      order = await request.json();
-    } catch {
-      return errors(400, 'the body is not JSON');
-    }
-    const { status, body } = await place(env, vm, url.origin, order);
-    return json(status, body);
-  }
+  if (path === '/orders' && request.method === 'POST') return forward(request, vm, url.origin, '/orders');
+
+  if (path === '/mcp') return forward(request, vm, url.origin, '/mcp');
 
   if (request.method !== 'GET' && request.method !== 'HEAD') return errors(405, 'the method is not allowed');
 
   if (path.startsWith('/o/')) {
     const parts = split(path.slice(3));
     if (!parts || !HASH.test(parts[0])) return errors(404, 'no such file');
-    const stored = await env.ORDERS.get(`orders/${parts[0]}.json`);
-    if (!stored) return errors(404, 'no such order: send it to POST /orders');
-    return file(request, env, vm, commit, parts[0], await stored.json(), parts[1]);
+    return file(request, env, vm, commit, parts[0], null, parts[1]);
   }
 
   if (path.startsWith('/m/')) {

@@ -178,6 +178,7 @@ defmodule World.FactoryTest do
       none = %{"african" => 0, "asian" => 0, "caucasian" => 0}
       assert paths(Orders.check(%{"blueprint" => "person", "options" => %{"origin" => none}})) == ["options.origin"]
       assert paths(Orders.check(%{"blueprint" => "traveler", "options" => %{"origin" => none}})) == ["options.origin"]
+      assert paths(Orders.check(%{"blueprint" => "traveler", "options" => %{"van" => "vw_crafter"}})) == ["options.van"]
 
       # An order from a URL gives the fields of an object as strings.
       url = %{"african" => "0.5", "asian" => "0.5", "caucasian" => "0"}
@@ -276,6 +277,7 @@ defmodule World.FactoryTest do
           "options" => %{"vehicle" => "motorbike", "helmet_color" => "#c0392b", "head" => 1.5}
         },
         %{"blueprint" => "traveler", "options" => %{"vehicle" => "car", "scene" => "parked"}},
+        %{"blueprint" => "traveler", "options" => %{"vehicle" => "camper", "van" => "promaster_136_high"}},
         %{"blueprint" => "exercise", "options" => %{"routine" => "yoga", "count" => 1, "seed" => 3}},
         %{"blueprint" => "person", "options" => %{"animations" => ["tai_chi"]}},
         %{"blueprint" => "person", "options" => %{"right_hand" => "fan", "left_hand" => "bottle", "hat" => "non_la"}},

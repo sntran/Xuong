@@ -98,6 +98,15 @@ game) and a vehicle of Phượt (`vehicle`: `car`, `camper`, `motorcycle`,
   finger out, and jabs three times; the body leans there and the head
   looks there).
 
+The camper is a van of the line: the option `van` (a model of the
+blueprint `van`; `transit_148` by default, the Ford Transit of DIY with
+the items in its engine bay). The other vehicles do not use it. The
+driver sits in the seat of that van: the hips 0.18 m in front of the
+mount of the seat (at the front of its track) and 0.55 m over the floor
+of the cab, so the head is in the window of the door. Parked, the person
+stands 0.52 m from the right side of the van. These sizes are by eye,
+from the renders of the Transit.
+
 A person on a moving vehicle is always in a safe pose: the eyes on the
 road, the hands on the bars or on the wheel. The vehicle goes to the
 front: seen from its right side, it goes to the right of the screen. At

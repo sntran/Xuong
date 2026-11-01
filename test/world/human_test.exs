@@ -170,6 +170,43 @@ defmodule World.HumanTest do
     end
   end
 
+  test "the camper is a van of the line: the driver sits in its seat, with the head under its roof" do
+    # The camper of DIY stays as it was.
+    assert {_, {-0.45, y, 1.15}, "drive", {x, -1.0}} = World.People.camper()
+    assert_in_delta y, 1.1, 1.0e-9
+    assert_in_delta x, 1.55, 1.0e-9
+
+    for van <- ~w(promaster_118 sprinter_170_ext_high transit_148_medium) do
+      m = World.Vehicles.Van.model(van)
+      {_, {-0.45, y, 1.15}, "drive", {x, -1.0}} = World.People.camper(van)
+      # The hips are in the cab: behind the front of the van, and less
+      # than 1.5 m behind it.
+      assert y < m["length"] / 2 - m["front"] and y > m["length"] / 2 - m["front"] - 1.5
+      assert_in_delta x, m["width"] / 2 + 0.517, 1.0e-9
+
+      scene = Build.scene(Detail.with(:far, fn -> World.People.traveler("camper", van: van) end), level: :far)
+      [_, l, h] = scene.extras["size"]
+      assert h < m["height"] + 0.01 and abs(l - m["length"]) < 0.06
+    end
+
+    parked =
+      Build.scene(Detail.with(:far, fn -> World.People.traveler("camper", [van: "sprinter_144"], "parked") end),
+        level: :far
+      )
+
+    assert parked.extras["kind"] == "vehicle"
+
+    # On foot, the van is no part of the traveler.
+    for scene <- ["ride", "parked"] do
+      foot =
+        Build.scene(Detail.with(:far, fn -> World.People.traveler("foot", [van: "sprinter_144"], scene) end),
+          level: :far
+        )
+
+      assert foot.extras["kind"] == "person"
+    end
+  end
+
   test "a parked vehicle keeps its colors: the white of the van, not the red of the palette" do
     ride = Build.scene(Detail.with(:far, fn -> World.People.traveler("camper") end), level: :far)
     parked = Build.scene(Detail.with(:far, fn -> World.People.traveler("camper", [], "parked") end), level: :far)

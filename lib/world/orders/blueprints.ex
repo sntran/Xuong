@@ -246,10 +246,16 @@ defmodule World.Orders.Blueprints do
           option("helmet_color", :color,
             default: nil,
             doc: "The color of the helmet of a rider on two wheels. None: a light gray."
+          ),
+          option("van", :choice,
+            default: "transit_148",
+            values: Van.models(),
+            doc:
+              "The van of the camper (the blueprint van): transit_148 is the Ford Transit of DIY, with the items in its engine bay. Only for the vehicle camper."
           )
         ] ++ person_options(),
       build: fn o ->
-        opts = person_opts(o) ++ [helmet: o["helmet_color"] && rgb(o["helmet_color"])]
+        opts = person_opts(o) ++ [helmet: o["helmet_color"] && rgb(o["helmet_color"]), van: o["van"]]
         World.People.traveler(o["vehicle"], opts, o["scene"])
       end,
       check: &origin_check/1,

@@ -14,7 +14,7 @@ defmodule World.People do
   """
   alias World.{Assembly, Frame, GLB, Part}
   alias World.People.{Human, Props}
-  alias World.Vehicles.{ChevyBolt, FordTransit, HondaVision, RoyalEnfieldHimalayan, TouringBicycle}
+  alias World.Vehicles.{ChevyBolt, FordTransit, HondaVision, RoyalEnfieldHimalayan, TouringBicycle, Van}
 
   @doc "A traveler on foot: a t-shirt, cargo pants and shoes."
   def traveler do
@@ -73,11 +73,9 @@ defmodule World.People do
   # pose, and the place of the person next to the parked vehicle (on its
   # right side, +x, a little to the back). The car and the van go on the
   # left: the seat of the driver in Việt Nam and in the United States.
+  # The camper is a van of the line (`camper/1`).
   @vehicles %{
     "car" => {&ChevyBolt.model/0, {-0.37, -0.15, 0.65}, "drive", {1.3, -0.6}},
-    # The seat of the van at the front of its track, so the head of the
-    # driver is in the window of the door (an opening at the near level).
-    "camper" => {&FordTransit.model/0, {-0.45, 1.1, 1.15}, "drive", {1.55, -1.0}},
     "motorcycle" => {&RoyalEnfieldHimalayan.model/0, {0.0, -0.3, 0.88}, "ride", {0.75, -0.25}},
     "motorbike" => {&HondaVision.model/0, @seat, "ride", {0.65, -0.2}},
     "bicycle" => {&TouringBicycle.model/0, {0.0, -0.3, 1.03}, "ride_bicycle", {0.55, -0.15}}
@@ -93,7 +91,39 @@ defmodule World.People do
   @moments ["wave", "point"]
 
   @doc "The vehicles of a traveler (the names of Phượt), and \"foot\"."
-  def vehicles, do: Enum.sort(["foot" | Map.keys(@vehicles)])
+  def vehicles, do: Enum.sort(["foot", "camper" | Map.keys(@vehicles)])
+
+  # The camper of a traveler with no van: the Ford Transit 148 in, high
+  # roof, with the items of DIY in its engine bay.
+  @camper "transit_148"
+
+  # The driver of a van: the hips over the seat of the driver, at the
+  # front of its track (0.2 m), so the head is in the window of the door
+  # (an opening at the near level): 0.18 m in front of the mount of the
+  # seat, and 0.55 m over the floor of the cab (0.6 m). The parked
+  # traveler stands 0.52 m from the right side, 1 m behind the middle.
+  # By eye, from the renders of the Transit.
+  @over_mount 0.1825
+  @hips_z 1.15
+  @from_side 0.517
+
+  @doc """
+  The camper of a traveler: a van of the line (`World.Vehicles.Van.models/0`;
+  by default `transit_148`, the Ford Transit of DIY with the items in its
+  engine bay), the hips of its driver, the pose, and the place of the
+  parked traveler.
+  """
+  def camper(van \\ nil) do
+    van = van || @camper
+    m = Van.model(van)
+    seat = m["make_data"]["seats"]["front"]
+    hips = {-seat["x"] / 1, m["length"] / 2 - (m["front"] + seat["d"]) + @over_mount, @hips_z}
+    model = if van == @camper, do: &FordTransit.model/0, else: fn -> Van.build(van, name: van <> "_camper") end
+    {model, hips, "drive", {m["width"] / 2 + @from_side, -1.0}}
+  end
+
+  defp vehicle("camper", opts), do: camper(Keyword.get(opts, :van))
+  defp vehicle(name, _opts), do: Map.fetch!(@vehicles, name)
 
   @doc """
   A traveler: a person (the options of `World.People.Human.person/2`, with
@@ -110,18 +140,30 @@ defmodule World.People do
     the front of the vehicle, +y), each to play once.
 
   A moving vehicle has its driver in a safe pose: the eyes on the road,
-  the hands on the bars or on the wheel.
+  the hands on the bars or on the wheel. The option `van` is the van of
+  the camper (`camper/1`).
   """
   def traveler(vehicle, opts \\ [], scene \\ "ride")
 
   def traveler("foot", opts, "ride"),
-    do: Human.person("traveler", Keyword.merge(opts, pose: "stand", animations: ["walk"], helmet: nil))
+    do:
+      Human.person(
+        "traveler",
+        Keyword.merge(Keyword.delete(opts, :van), pose: "stand", animations: ["walk"], helmet: nil)
+      )
 
   def traveler("foot", opts, "parked"),
-    do: facing(Human.person("traveler", Keyword.merge(opts, pose: "stand", animations: @moments, helmet: nil)))
+    do:
+      facing(
+        Human.person(
+          "traveler",
+          Keyword.merge(Keyword.delete(opts, :van), pose: "stand", animations: @moments, helmet: nil)
+        )
+      )
 
   def traveler(vehicle, opts, "ride") do
-    {model, hips, pose, _} = Map.fetch!(@vehicles, vehicle)
+    {model, hips, pose, _} = vehicle(vehicle, opts)
+    opts = Keyword.delete(opts, :van)
     helmet = if vehicle in @two_wheels, do: Keyword.get(opts, :helmet) || @helmet
     person = Human.person("traveler", Keyword.merge(opts, pose: pose, helmet: helmet))
     m = model.()
@@ -137,7 +179,8 @@ defmodule World.People do
   end
 
   def traveler(vehicle, opts, "parked") do
-    {model, _, _, {x, y}} = Map.fetch!(@vehicles, vehicle)
+    {model, _, _, {x, y}} = vehicle(vehicle, opts)
+    opts = Keyword.delete(opts, :van)
     person = Human.person("traveler", Keyword.merge(opts, pose: "stand", animations: @moments, helmet: nil))
     m = model.()
 
